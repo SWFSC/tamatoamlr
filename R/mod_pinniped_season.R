@@ -206,11 +206,13 @@ mod_pinniped_season_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       pup_fate <- reactive({
         x.totals <- ps_df() %>%
+          filter(parturition) %>%
           group_by(season_name) %>%
           summarise(n_pups_total = n())
 
         x <- ps_df() %>%
-          filter(pup_mortality %in% req(input$pup_fate_choices))
+          filter(parturition,
+                 pup_mortality %in% req(input$pup_fate_choices))
 
         x %>%
           group_by(season_name, pup_mortality) %>%
