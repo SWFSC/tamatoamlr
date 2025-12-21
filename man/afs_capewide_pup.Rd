@@ -67,7 +67,7 @@ return counts and standard deviations
 
 Note that none of these functions do any rounding. To round values, for
 instance to get a whole number for pup counts, users may use functions such
-as \code{\link[base:Round]{base::round()}} or \code{\link[amlrDatabases:round_logical]{amlrDatabases::round_logical()}}
+as \code{\link[base:Round]{base::round()}} or \code{\link[amlrian:round_logical]{amlrian::round_logical()}}
 
 The cwp functions make several assumptions specific to U.S. AMLR Pinniped
 Data:
@@ -81,7 +81,7 @@ do not have variance values.
 }
 }
 \examples{
-\dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
   # Not run; examples only will run if `con` is a valid database connection
   con <- odbc::dbConnect(odbc(), filedsn = "amlr-pinniped-db-prod.dsn")
   x <- tbl_vCensus_AFS_Capewide_Pup(con)

@@ -78,7 +78,7 @@ mod_views_server(id, src, season.df, tab)
 \item{id}{character used to specify namespace, see \code{\link[shiny:NS]{shiny::NS()}}}
 
 \item{src}{reactive; a DBI database connection. Intended to be the output of
-\code{\link[=mod_database_server]{mod_database_server()}}, i.e. a pool object}
+\code{\link[amlrian:mod_database]{amlrian::mod_database_server()}}, i.e. a pool object}
 
 \item{season.df}{reactive; the season info data frame. Intended to be the
 first element (\code{season.df}) of the (list) output of

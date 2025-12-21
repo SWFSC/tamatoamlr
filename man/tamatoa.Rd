@@ -9,7 +9,7 @@ tamatoa(..., filedsn = NULL)
 \arguments{
 \item{...}{passed to \code{\link[shiny:shinyApp]{shiny::shinyApp()}}}
 
-\item{filedsn}{character; passed to \code{\link[amlrDatabases:mod_database]{amlrDatabases::mod_database_server()}}}
+\item{filedsn}{character; passed to \code{\link[amlrian:mod_database]{amlrian::mod_database_server()}}}
 }
 \description{
 Open Tamatoa, the AMLR Pinniped program Shiny app
@@ -19,7 +19,7 @@ The Tamatoa Shiny app is the recommended way for end-users to access
 data from the AMLR Pinniped database
 }
 \examples{
-\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 tamatoa()
 
 # Testing

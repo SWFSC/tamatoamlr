@@ -14,7 +14,7 @@ License: Apache License (== 2)
 BugReports: https://github.com/us-amlr/tamatoamlr/issues
 Depends: R (>= 4.0.0)
 Imports: 
-    amlrDatabases (>= 0.7), 
+    amlrian (>= 1.0), 
     dplyr (>= 1.0),
     dbplyr, 
     DT, 
@@ -35,11 +35,11 @@ Imports:
     stringr, 
     tidyr
 Remotes:
-    us-amlr/amlrDatabases
+    SWFSC/amlrian
 Suggests: 
     testthat (>= 3.0.0)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Config/testthat/edition: 3

@@ -38,7 +38,7 @@
 #'
 #'   Note that none of these functions do any rounding. To round values, for
 #'   instance to get a whole number for pup counts, users may use functions such
-#'   as [base::round()] or [amlrDatabases::round_logical()]
+#'   as [base::round()] or [amlrian::round_logical()]
 #'
 #'   The cwp functions make several assumptions specific to U.S. AMLR Pinniped
 #'   Data:

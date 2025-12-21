@@ -11,7 +11,7 @@
 #' @author Sam Woodman \email{sam.woodman@@noaa.gov}
 #' @author Karen Snyder \email{ksnyder@@g.hmc.edu}
 #'
-#' @import amlrDatabases
+#' @import amlrian
 #' @import dplyr
 #' @import ggplot2
 #' @import shiny
@@ -79,7 +79,7 @@ utils::globalVariables(c(
   "census_notes", "census_created_dt",
 
 
-  # AFS Capewide Pup Census
+  # AFS Cape-wide Pup Census
   "pup_count", "pup_live_count", "pup_dead_count", "date_min",
   "count_loc_mean", "count_loc_var", "count_loc_sd", "study_beach_count",
   "count_mean", "count_var", "count_sd", "count_range", "group",

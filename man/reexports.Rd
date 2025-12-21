@@ -16,6 +16,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{amlrDatabases}{\code{\link[amlrDatabases:amlr_season]{amlr_date_from_season}}, \code{\link[amlrDatabases:amlr_db]{amlr_dbConnect}}, \code{\link[amlrDatabases:amlr_season]{amlr_season_from_date}}, \code{\link[amlrDatabases:amlr_season]{amlr_year_from_season}}, \code{\link[amlrDatabases]{round_logical}}, \code{\link[amlrDatabases]{tableNA}}}
+  \item{amlrian}{\code{\link[amlrian:amlr_season]{amlr_date_from_season}}, \code{\link[amlrian:amlr_db]{amlr_dbConnect}}, \code{\link[amlrian:amlr_season]{amlr_season_from_date}}, \code{\link[amlrian:amlr_season]{amlr_year_from_season}}, \code{\link[amlrian]{round_logical}}, \code{\link[amlrian]{tableNA}}}
 }}
 

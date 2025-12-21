@@ -3,7 +3,7 @@
 #' Open Tamatoa, the AMLR Pinniped program Shiny app
 #'
 #' @param ... passed to [shiny::shinyApp()]
-#' @param filedsn character; passed to [amlrDatabases::mod_database_server()]
+#' @param filedsn character; passed to [amlrian::mod_database_server()]
 #'
 #' @details
 #' The Tamatoa Shiny app is the recommended way for end-users to access
