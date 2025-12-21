@@ -319,7 +319,8 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
         req(input$summary_type)
         tr_df_filter_ka() %>%
           # collect() %>% #See NOTE above
-          tag_sort(tag.sort = TRUE, tag.sort.primary = TRUE) %>%
+          # tag_sort(tag.sort = TRUE, tag.sort.primary = TRUE) %>%
+          tag_sort(col = tag_primary, .drop = FALSE) %>%
           mutate(species = str_to_sentence(species),
                  species = factor(species, levels = sort(unique(species))))
       })
@@ -341,23 +342,21 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
         # Get the number of resights by season, and pivot wider
         tr_df() %>%
           filter(pinniped_id %in% p.keep) %>%
-          arrange(species, tag_sort_primary) %>%
+          arrange(species) %>%
           group_by(season_name, pinniped_id) %>%
           summarise(n_resights = n(),
                     species = unique(species),
                     tag_primary = unique(tag_primary),
                     tag_type_primary = unique(tag_type_primary),
-                    tag_sort_primary = unique(tag_sort_primary),
                     tags = paste(unique(tag), collapse = "; "),
                     .groups = "drop") %>%
           mutate(id = paste(species, tag_primary, tag_type_primary,
                             sep = " | ")) %>%
           arrange(desc(season_name)) %>%
-          pivot_wider(id_cols = c(id, species, tag_primary, tag_type_primary,
-                                  tag_sort_primary),
+          pivot_wider(id_cols = c(id, species, tag_primary, tag_type_primary),
                       names_from = season_name, values_from = n_resights) %>%
-          arrange(species, tag_sort_primary) %>%
-          select(-tag_sort_primary) %>%
+          tag_sort(tag_primary) %>%
+          arrange(species) %>%
           relocate(species, tag_primary, tag_type_primary, .after = last_col())
       })
 
@@ -387,7 +386,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
           mutate(species = as.character(species)) %>%
           group_by(season_info_id, season_name, pinniped_id, species,
                    tag_primary, tag_type_primary, sex = pinniped_sex, cohort,
-                   tag_sort_primary) %>%
+                   tag_primary_sort) %>%
           summarise(n_resights = n(),
                     resight_date_first = min(resight_date),
                     resight_date_last = max(resight_date),
@@ -398,10 +397,10 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
           mutate(age = pinniped_age(today(), cohort))  %>%
           left_join(ps, by = join_by(season_info_id, pinniped_id)) %>%
           select(-season_info_id) %>%
-          relocate(pinniped_id, tag_sort_primary,
+          relocate(pinniped_id, tag_primary_sort,
                    .after = last_col()) %>%
           relocate(age, amlr_tag_primary, .after = cohort) %>%
-          arrange(species, tag_sort_primary)
+          arrange(species, tag_primary_sort)
       })
 
 

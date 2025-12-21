@@ -2,42 +2,65 @@
 % Please edit documentation in R/tag_sort.R
 \name{tag_sort}
 \alias{tag_sort}
-\title{Generate column to sort Pinniped tags}
+\alias{vec_tag_sort}
+\title{Intuitively sort by tag}
 \usage{
-tag_sort(x, tag.sort = TRUE, tag.sort.primary = TRUE)
+tag_sort(data, col, .arrange = TRUE, .drop = TRUE)
+
+vec_tag_sort(x)
 }
 \arguments{
-\item{x}{data frame, with at least one of 'tag' or 'tag_primary' columns}
+\item{data}{A data frame, with a tag column}
 
-\item{tag.sort}{logical, indicates if a tag__sort column be
-generated using the tag column? Default is \code{TRUE}}
+\item{col}{\if{html}{\out{<tidy-select>}} (link todo) Column of tag numbers;
+used to generate the tag sort column}
 
-\item{tag.sort.primary}{logical, indicates if a tag_primary_sort column be
-generated using the tag_primary column. Default is \code{TRUE}}
+\item{.arrange}{If \code{TRUE}, then sort the data frame by the tag sort column}
+
+\item{.drop}{If \code{TRUE}, then drop the tag sort column before returning the
+data frame}
+
+\item{x}{character vector of tag numbers}
 }
 \description{
-Generate column to sort Pinniped tags
+Intuitively sort a data frame by a given column of tag numbers
 }
 \details{
 Pinniped tags may contain a mix of letters and numbers.
 Specifically, tags may have a capital letter as the first symbol,
 followed by some number of 0s.
 Because of this, tags must be treated as characters,
-and thus will not properly sort if left as-is
+and thus will not properly sort as-is
 (e.g., A100 will sort in front of A21).
-This function generates column(s) with the tag values padded with 0s
+This function takes a column of tag numbers, and creates a tag sort column
+with the tag values padded with 0s
 in the relevant places to provide intuitive sorting.
 
-If one of tag.sort and tag.sort.primary are \code{TRUE}, then the output
-data frame will be sorted by the relevant sort column.
-If both of tag.sort and tag.sort.primary are \code{TRUE}, then the output
-will be sorted by tag_sort_primary.
+Specifically, for the tag sort column, all tag numbers will be padded with
+zeros to a length of 10. For tags with all numeric values, all the padding
+will be the left of the tag number.
+For tag numbers with a leading capital letter, zeros will be inserted after
+the letter and before the rest of the tag number.
+For instance, "345" become "0000000345", while "A21" becomes "A000000021".
+Thus, tag numbers of all numeric values will be sorted before
+tags with a letter for the first symbol.
+
+The arguments \code{.arrange} and \code{.drop} allow the user to conveniently specify if
+the data frame should be sorted by the tag sort column, and if the tag sort
+column should be dropped from the output, respectively.
+
+If you're working with a vector rather than a full data frame,
+use \code{vec_tag_sort}.
 }
 \examples{
 df <- data.frame(
   tag_primary = c("10", "A100", "A20", "5"),
   tag = c("C99", "A100", "A20", "5")
 )
-tag_sort(df, tag.sort = TRUE, tag.sort.primary = TRUE)
+
+tag_sort(df, tag)
+tag_sort(df, tag_primary, .arrange = FALSE, .drop = FALSE)
+
+vec_tag_sort(df[["tag"]])
 
 }

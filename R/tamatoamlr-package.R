@@ -24,7 +24,7 @@
 #' @importFrom odbc odbc dbConnect
 #' @importFrom pool dbIsValid dbGetQuery poolClose
 #' @importFrom purrr pmap_dbl pmap_lgl set_names
-#' @importFrom rlang .data enquo is_bool
+#' @importFrom rlang .data enquo is_bool is_character
 #' @importFrom scales hue_pal
 #' @importFrom shinybusy add_busy_spinner
 #' @importFrom shinydashboard box dashboardBody tabItems tabItem dashboardHeader
@@ -35,6 +35,7 @@
 #' @importFrom stringr str_count str_detect str_length str_match str_pad
 #'   str_remove_all str_replace_all str_replace_na str_split_i str_sub
 #'   str_to_lower str_to_sentence
+#' @importFrom tidyselect eval_select
 #' @importFrom tidyr complete nest nesting unnest pivot_longer pivot_wider
 #'   replace_na
 #' @importFrom utils globalVariables read.csv write.csv
@@ -114,7 +115,8 @@ utils::globalVariables(c(
 
   "freq_chr", "recovery_date", "deployment_date", "end_date", "tag_primary",
   "tag_type_primary", "tag_unique_primary", "non_amlr_tag_primary",
-  "tag_sort_primary", "amlr_tag_primary", "apw_collect", "unk_group_id",
+  "tag_sort_primary", "tag_primary_sort", "col_sort",
+  "amlr_tag_primary", "apw_collect", "unk_group_id",
   "deployment_season", "pinniped_sex", "arrival_date", 'twins', "status", "age",
   "on_the_fly_id", "sample_type", "sample_type_group", "age_class",
   "individual_seals_count", "n_adults_juveniles", "n_pups", "ad_male_sum",

@@ -12,11 +12,12 @@ Description: This package contains Tamatoa, a Shiny app that connects to the
     is for the Shiny app to provide the main functionality for this package.
 License: Apache License (== 2)
 BugReports: https://github.com/us-amlr/tamatoamlr/issues
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.1.0)
 Imports: 
     amlrian (>= 1.0), 
     dplyr (>= 1.0),
     dbplyr, 
+    cli, 
     DT, 
     forcats, 
     glue,
@@ -33,6 +34,7 @@ Imports:
     shinyjs, 
     stringi, 
     stringr, 
+    tidyselect, 
     tidyr
 Remotes:
     SWFSC/amlrian
