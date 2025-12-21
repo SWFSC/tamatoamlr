@@ -25,6 +25,7 @@ tamatoa <- function(..., filedsn = NULL) {
   # on.exit(options(old), add = TRUE)
   # options(shiny.maxRequestSize = 50 * 1024^2) # Max file size is 50MB
   # options("digits" = 1)   # for proper display of decimals
+  i1 <- icon("th", lib = "font-awesome")
 
 
   ##############################################################################
@@ -38,21 +39,23 @@ tamatoa <- function(..., filedsn = NULL) {
     dashboardSidebar(
       sidebarMenu(
         id = "tabs",
-        menuItem("Database and Season Info", tabName = .id.list$info, icon = icon("th")),
-        # menuItem("AFS Diet", tabName = "tab_afs_diet", icon = icon("th", lib = "font-awesome")),
+        menuItem("Database and Season Info", tabName = .id.list$info, icon = i1),
+        # menuItem("AFS Diet", tabName = "tab_afs_diet", icon = i1),
         # menuItem("AFS Natality and Pup Mortality", tabName = "tab_afs_pinniped_season", icon = icon("th")),
         menuItem("AFS DCC", tabName = .id.list$dcc, icon = icon("th")),
-        menuItem("AFS Capewide Pup Census", tabName = .id.list$afs_cwpc, icon = icon("th", lib = "font-awesome")),
-        menuItem("AFS SAM Census", tabName = .id.list$afs_sam, icon = icon("th", lib = "font-awesome")),
-        menuItem("AFS Study Beach Census", tabName = .id.list$afs_sbc, icon = icon("th", lib = "font-awesome")),
-        # menuItem("Pinnipeds + Tags", tabName = "tab_pt", icon = icon("th", lib = "font-awesome")),
+        menuItem(
+          "AFS Capewide Pup Census", tabName = .id.list$afs_cwpc, icon = i1),
+        menuItem("AFS SAM Census", tabName = .id.list$afs_sam, icon = i1),
+        menuItem("AFS Study Beach Census", tabName = .id.list$afs_sbc, icon = i1),
+        # menuItem("Pinnipeds + Tags", tabName = "tab_pt", icon = i1),
         # menuItem("Captures", tabName = .id.list$captures, icon = icon("th")),
         menuItem("CCAMLR Pup Weights", tabName = .id.list$cpw, icon = icon("th")),
         menuItem("CS-PHOC: Phocid Census", tabName = .id.list$csphoc, icon = icon("th")),
         menuItem("Pinniped Season", tabName = .id.list$ps, icon = icon("th")),
-        menuItem("Tag Resights", tabName = .id.list$resights, icon = icon("th", lib = "font-awesome")),
-        menuItem("Takes - MMPA", tabName = .id.list$takes, icon = icon("th", lib = "font-awesome")),
-        menuItem("Views", tabName = .id.list$views, icon = icon("th", lib = "font-awesome")),
+        menuItem("Samples", tabName = .id.list$samples, icon = i1),
+        menuItem("Tag Resights", tabName = .id.list$resights, icon = i1),
+        menuItem("Takes - MMPA", tabName = .id.list$takes, icon = i1),
+        menuItem("Views", tabName = .id.list$views, icon = i1),
         tags$br(), tags$br(),
         column(12, uiOutput("tabs_warning")),
         actionButton("stop", "Close")
@@ -88,6 +91,7 @@ tamatoa <- function(..., filedsn = NULL) {
         tabItem(.id.list$cpw, mod_ccamlr_pup_weights_ui(.id.list$cpw)),
         tabItem(.id.list$csphoc, mod_phocid_census_ui(.id.list$csphoc)),
         tabItem(.id.list$ps, mod_pinniped_season_ui(.id.list$ps)),
+        tabItem(.id.list$samples, mod_samples_ui(.id.list$samples)),
         tabItem(.id.list$resights, mod_tag_resights_ui(.id.list$resights)),
         tabItem(.id.list$takes, mod_takes_ui(.id.list$takes)),
         tabItem(.id.list$views, mod_views_ui(.id.list$views))
@@ -142,6 +146,8 @@ tamatoa <- function(..., filedsn = NULL) {
       .id.list$csphoc, db.pool, si.list$season.df, tab)
     mod_pinniped_season_server(
       .id.list$ps, db.pool, si.list$season.df, tab)
+    mod_samples_server(
+      .id.list$samples, db.pool, si.list$season.df, tab)
     mod_tag_resights_server(
       .id.list$resights, db.pool, si.list$season.df, tab)
     mod_takes_server(

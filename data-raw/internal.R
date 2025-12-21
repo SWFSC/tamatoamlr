@@ -35,8 +35,8 @@
 )
 
 .id.list <- list(
-  "db"       = "db", # Database connections
-  "si"       = "si", # Season info
+  "db"       = "db",   # Database connections
+  "si"       = "si",   # Season info
   "info"     = "info", # Info tab
   "dcc"      = "dcc_pinniped",
   "afs_cwpc" = "afs_capewide_pup_census",
@@ -46,6 +46,7 @@
   "cpw"      = "ccamlr_pup_weights",
   "csphoc"   = "csphoc",
   "ps"       = "pinniped_season",
+  "samples"  = "samples",
   "resights" = "tag_resights",
   "takes"    = "takes", #MMPA takes tab
   "views"    = "views"
