@@ -34,7 +34,7 @@ tamatoa <- function(..., filedsn = NULL) {
     title = "Tamatoa",
     dashboardHeader(
       title = "Tamatoa: Analyze and Visualize U.S. AMLR Pinniped Data",
-      titleWidth = "540"
+      titleWidth = "560"
     ),
     dashboardSidebar(
       sidebarMenu(

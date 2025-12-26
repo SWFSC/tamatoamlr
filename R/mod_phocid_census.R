@@ -225,62 +225,68 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
         # NOTE: if this is updated,
         #   you probably should update the code in mod_afs_study_beach_census
         if (input$summary_timing == "fs_mult_date") {
-          req(fs$month(), fs$day())
-          fs.date.df <- data.frame(
-            season_name = fs$season(),
-            m = fs$month(),
-            d = fs$day()
-          )
-          days.max <- 14
-
-          census.df.ds.orig <- census.df %>%
-            left_join(fs.date.df, by = "season_name") %>%
-            mutate(season_date = amlr_date_from_season(season_name, m, d),
-                   days_diff = as.numeric(
-                     difftime(census_date_start, season_date, units = "days")),
-                   days_diff = if_else(days_diff < 0, abs(days_diff)-0.5, days_diff)) %>%
-            group_by(season_name) %>%
-            filter(days_diff == min(days_diff))
-
-          census.df.ds <- census.df.ds.orig %>%
-            filter(days_diff <= days.max) %>%
-            select(-c(m, d, season_date)) %>%
-            ungroup()
-
-          if (length(unique(census.df.ds$season_name)) != length(unique(census.df.ds$census_phocid_header_id)))
-            validate(paste("Error in phocid census data single summaries -",
-                           "please contact the database manager"))
-
-          nrow.diff <- nrow(census.df.ds.orig) - nrow(census.df.ds)
-
-          validate(
-            need(nrow(census.df.ds) > 0,
-                 paste("There are no census records for the",
-                       "selected season(s) within", days.max,
-                       "days of the provided date",
-                       paste0("(", fs$month(), " ", fs$day(), ")")))
-          )
-
-          # Warning message for seasons w/o census record close enough
-          if (nrow.diff != 0) {
-            seasons.rmd <- census.df.ds.orig %>%
-              filter(!(season_name %in% unique(census.df.ds$season_name))) %>%
-              distinct(season_name) %>%
-              arrange(season_name) %>%
-              select(season_name) %>%
-              unlist()
-
-            vals$warning_date_single_filter <- paste(
-              "The following seasons have phocid census records,",
-              "but none within", days.max, "days of the provided date",
-              paste0("(", fs$month(), " ", fs$day(), "):"),
-              paste(seasons.rmd, collapse = ", ")
-            )
-          } else {
-            vals$warning_date_single_filter <- NULL
-          }
-
-          census.df <- census.df.ds
+          # req(fs$month(), fs$day())
+          # fs.date.df <- data.frame(
+          #   season_name = fs$season(),
+          #   m = fs$month(),
+          #   d = fs$day()
+          # )
+          # days.max <- 14
+          #
+          # census.df.ds.orig <- census.df %>%
+          #   left_join(fs.date.df, by = "season_name") %>%
+          #   mutate(season_date = amlr_date_from_season(season_name, m, d),
+          #          days_diff = as.numeric(
+          #            difftime(census_date_start, season_date, units = "days")),
+          #          days_diff = if_else(days_diff < 0, abs(days_diff)-0.5, days_diff)) %>%
+          #   group_by(season_name) %>%
+          #   filter(days_diff == min(days_diff))
+          #
+          # census.df.ds <- census.df.ds.orig %>%
+          #   filter(days_diff <= days.max) %>%
+          #   select(-c(m, d, season_date)) %>%
+          #   ungroup()
+          #
+          # if (n_distinct(census.df.ds$season_name) !=
+          #     n_distinct(census.df.ds$census_phocid_header_id))
+          #   validate(paste("Error in phocid census fs_mult_date summaries -",
+          #                  "please contact the database manager"))
+          #
+          # nrow.diff <- nrow(census.df.ds.orig) - nrow(census.df.ds)
+          #
+          # validate(
+          #   need(nrow(census.df.ds) > 0,
+          #        paste("There are no records for the",
+          #              "selected season(s) within", days.max,
+          #              "days of the provided date of ",
+          #              fs$month(), fs$day()))
+          # )
+          #
+          # # Warning message for seasons w/o census record close enough
+          # if (nrow.diff != 0) {
+          #   seasons.rmd <- census.df.ds.orig %>%
+          #     filter(!(season_name %in% unique(census.df.ds$season_name))) %>%
+          #     distinct(season_name) %>%
+          #     arrange(season_name) %>%
+          #     select(season_name) %>%
+          #     unlist()
+          #
+          #   vals$warning_date_single_filter <- paste(
+          #     "The following seasons have census records,",
+          #     "but none within", days.max, "days of the provided date",
+          #     paste0("(", fs$month(), " ", fs$day(), "):"),
+          #     paste(seasons.rmd, collapse = ", ")
+          #   )
+          # } else {
+          #   vals$warning_date_single_filter <- NULL
+          # }
+          #
+          # census.df <- census.df.ds
+          req(fs$mult_date())
+          # out <- .mult_date(census.df, req(fs$season()), req(fs$mult_date()), 14)
+          out <- .mult_date(census.df, fs, 14)
+          census.df <- out[[1]]
+          vals$warning_date_single_filter <- out[[2]]
         }
 
         # if (input$summary_timing == "fs_week") {
@@ -494,11 +500,19 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
 
         y.lab <- if (input$plot_cumsum) "Count (cumulative sum)" else "Count"
 
+        md <- if (input$summary_timing == "fs_mult_date") {
+          req(fs$mult_date())
+          paste(day(fs$mult_date()), month.abb[month(fs$mult_date())])
+        } else {
+          ""
+        }
+
+
         gg.title <- case_when(
           input$summary_timing == "fs_mult_total" ~
             "Phocid Census - Totals by Season",
           input$summary_timing == "fs_mult_date" ~
-            paste("Phocid Census - Closest to", fs$month(), fs$day()),
+            paste("Phocid Census - Closest to", md),
           # input$summary_timing == "fs_week" ~
           #   paste("Phocid Census - Week", filter_season()$week(), "by Season"),
           input$summary_timing == "fs_single" ~
