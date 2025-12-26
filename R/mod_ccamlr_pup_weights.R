@@ -21,7 +21,7 @@ mod_ccamlr_pup_weights_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(4, .summaryTimingUI(ns, c("fs_total", "fs_single", "fs_raw"))), #"fs_facet",
+          column(4, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_raw"))), #"fs_facet",
           conditionalPanel(
             condition = "input.summary_timing != 'fs_raw'", ns = ns,
             column(4, radioButtons(ns("summary_type"), tags$h5("Summarize by:"),
@@ -234,7 +234,7 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
         ggplot.title <- case_when(
           input$summary_timing == "fs_single" ~
             paste("CCAMLR Pup Weights -", filter_season()$season()),
-          input$summary_timing == "fs_total" ~ "CCAMLR Pup Weights"
+          input$summary_timing == "fs_mult_total" ~ "CCAMLR Pup Weights"
         )
 
         if (input$sex_grp) {

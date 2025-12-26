@@ -33,7 +33,7 @@ mod_pinniped_season_ui <- function(id) {
         helpText("This tab allows you to generate summaries of pinniped season",
                  "data"),
         fluidRow(
-          column(5, .summaryTimingUI(ns, c("fs_total", "fs_single"))),
+          column(5, .summaryTimingUI(ns, c("fs_mult_total", "fs_single"))),
           column(3, radioButtons(ns("summary_type"), tags$h5("Summary type"),
                                  choices = c("Average age" = "age",
                                              "Natality rates" = "natality",

@@ -34,7 +34,7 @@ mod_phocid_census_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(4, .summaryTimingUI(ns, c("fs_total", "fs_date_single", "fs_single"))),
+          column(4, .summaryTimingUI(ns, c("fs_mult_total", "fs_mult_date", "fs_single"))),
           column(4, .summaryLocationUI(ns, c("by_capewide", "by_beach"), "by_capewide")),
           column(4, .summarySpAgeSexUI(ns, c("by_sp", "by_sp_age_sex"), "by_sp"))
         ),
@@ -224,7 +224,7 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
         # Do additional date single filtering, if necessary
         # NOTE: if this is updated,
         #   you probably should update the code in mod_afs_study_beach_census
-        if (input$summary_timing == "fs_date_single") {
+        if (input$summary_timing == "fs_mult_date") {
           req(fs$month(), fs$day())
           fs.date.df <- data.frame(
             season_name = fs$season(),
@@ -444,13 +444,13 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
           arrange(if(census.date %in% names(.)) desc(!!sym(census.date)) else desc(season_name),
                   species)
 
-        if (input$summary_timing == "fs_total") {
+        if (input$summary_timing == "fs_mult_total") {
           census_df_filter_location() %>%
             group_by(season_name) %>%
             summarise(n_header_records = n_distinct(census_phocid_header_id)) %>%
             right_join(df.out, by = "season_name") %>%
             select(season_name, .data$n_header_records, everything())
-        } else if (input$summary_timing == "fs_date_single") {
+        } else if (input$summary_timing == "fs_mult_date") {
           census_df_filter_location() %>%
             group_by(season_name) %>%
             summarise(n_header_records = n_distinct(census_phocid_header_id),
@@ -495,9 +495,9 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
         y.lab <- if (input$plot_cumsum) "Count (cumulative sum)" else "Count"
 
         gg.title <- case_when(
-          input$summary_timing == "fs_total" ~
+          input$summary_timing == "fs_mult_total" ~
             "Phocid Census - Totals by Season",
-          input$summary_timing == "fs_date_single" ~
+          input$summary_timing == "fs_mult_date" ~
             paste("Phocid Census - Closest to", fs$month(), fs$day()),
           # input$summary_timing == "fs_week" ~
           #   paste("Phocid Census - Week", filter_season()$week(), "by Season"),

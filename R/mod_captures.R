@@ -20,7 +20,7 @@ mod_captures_ui <- function(id) {
       fluidRow(
         column(
           width = 4,
-          .summaryTimingUI(ns, c("fs_total", "fs_single", #"fs_capture_ind",
+          .summaryTimingUI(ns, c("fs_mult_total", "fs_single", #"fs_capture_ind",
                                  "fs_raw"))
         ),
         column(

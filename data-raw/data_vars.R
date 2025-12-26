@@ -31,7 +31,7 @@ usethis::use_data(pinniped.sp.study, overwrite = TRUE)
 
 
 ## code to prepare `afs.study.beach.counts` dataset goes here
-# TODO: add pup sum somehow?
+# Pup sum is added/handled in study beach census module
 afs.study.beach.counts <- c(
   "pup_live_count", "pup_dead_count", "ad_female_count", "ad_male_sum",
   "juv_female_count", "juv_male_count", "juv_unk_count",
