@@ -35,7 +35,7 @@
 .summaryTimingUI <- function(
     ns,
     choices = .summary.timing.choices,
-    choices.selected = "fs_single"
+    selected = "fs_single"
 ) {
   choices.args <- match.arg(choices, several.ok = TRUE)
 
@@ -48,11 +48,11 @@
   ]
   # choices.list <- intersect(.summary.timing.choices.list, choices.args)
 
-  if (!(choices.selected %in% choices.list))
-    stop("choices.selected must be one of the choices")
+  if (!(selected %in% choices.list))
+    stop("selected must be one of the choices")
 
   radioButtons(ns("summary_timing"), label = tags$h5("Summary timing"),
-               choices = choices.list, selected = choices.selected)
+               choices = choices.list, selected = selected)
 }
 
 
@@ -147,7 +147,7 @@
 
 #-------------------------------------------------------------------------------
 ### For fs_mult_date summary: return the census data closest to given date
-.mult_date <- function(census.df, fs, days.max) {
+.mult_date <- function(census.df, fs, days.max, vals) {
   # req(fs$month(), fs$day())
   # browser()
 
@@ -206,10 +206,12 @@
   } else {
     vals.warning <- NULL
   }
+  vals$warning_date_single_filter <- vals.warning
 
-  list(
-    census.df.ds,
-    vals.warning
-  )
+  # list(
+  #   census.df.ds,
+  #   vals.warning
+  # )
+  census.df.ds
 }
 

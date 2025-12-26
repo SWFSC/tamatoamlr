@@ -284,9 +284,9 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
           # census.df <- census.df.ds
           req(fs$mult_date())
           # out <- .mult_date(census.df, req(fs$season()), req(fs$mult_date()), 14)
-          out <- .mult_date(census.df, fs, 14)
-          census.df <- out[[1]]
-          vals$warning_date_single_filter <- out[[2]]
+          census.df <- .mult_date(census.df, fs, 14, vals)
+          # census.df <- out[[1]]
+          # vals$warning_date_single_filter <- out[[2]]
         }
 
         # if (input$summary_timing == "fs_week") {
