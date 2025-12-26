@@ -6,34 +6,40 @@ mod_samples_ui <- function(id) {
   # assemble UI elements
   tagList(
     fluidRow(
-      box(
-        title = "Filters", status = "warning", solidHeader = FALSE,
-        width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Filters", width = 6,
         # mod_filter_season_ui(ns("filter_season"))
         fluidRow(
           column(6, uiOutput(ns("season")))
         )
       ),
-      box(
-        title = "Summary options", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
-        helpText("Samples"),
+      amlr_box(
+        title = "Summary options", width = 6,
+        helpText("Samples..."),
         fluidRow(
           column(
             width = 6,
-            selectInput(ns("view"), tags$h5("Summary"),
-                        choices = c("Sample inventory" = "sample_inventory",
-                                    "Sample types" = "sample_types"),
-                        selected = "sample_inventory")
+            selectInput(ns("summary"), tags$h5("Summary"),
+                        choices = c("Sample inventory" = "inventory",
+                                    "Sample type" = "type"),
+                        selected = "inventory")
           ),
+          # column(6, uiOutput(ns("summary_type_uiOut_radio")))
           column(
             width = 6,
             conditionalPanel(
-              condition = "input.view == 'sample_inventory'", ns = ns,
-              radioButtons(ns("summary_type"), tags$h5("Summarize by"),
+              condition = "input.summary == 'inventory'", ns = ns,
+              radioButtons(ns("inventory_summ"), tags$h5("Summarize by"),
                            choices = c("All samples" = "all",
                                        "Sample type" = "sample_type",
                                        "Sample type group" = "sample_type_group"),
                            selected = "all")
+            ),
+            conditionalPanel(
+              condition = "input.summary == 'type'", ns = ns,
+              radioButtons(ns("type_summ"), tags$h5("Summarize by"),
+                           choices = c("DNA - Ethanol" = "dna_etoh",
+                                       "DNA - RNALater" = "dna_rnalater"))
             )
           )
         )
@@ -71,8 +77,29 @@ mod_samples_server <- function(id, src, season.df, tab) {
       # })
 
 
-      #-------------------------------------------------------------------------
-      # Sample inventory view
+      # output$summary_type_uiOut_radio <- renderUI({
+      #   choices <- if (input$summary == "inventory") {
+      #     choices <- c(
+      #       "All samples" = "all",
+      #       "Sample type" = "sample_type",
+      #       "Sample type group" = "sample_type_group"
+      #     )
+      #   } else if (input$summary == "type") {
+      #     label <-
+      #     choices <- c(
+      #       "DNA - Ethanol" = "dna_etoh",
+      #       "DNA - RNALater" = "dna_rnalater"
+      #     )
+      #   } else {
+      #     validate("Invalid input$summary value - contact the database manager")
+      #   }
+      #
+      #   radioButtons(
+      #     session$ns("summary_type"), tags$h5("Summarize by:"),
+      #     choices = choices
+      #   )
+      # })
+
 
       sample_inventory_collect <- reactive({
         sample.inventory <- try(
@@ -86,11 +113,15 @@ mod_samples_server <- function(id, src, season.df, tab) {
         sample.inventory
       })
 
+
+      #-------------------------------------------------------------------------
+      # Sample inventory
+
       sample_inventory <- reactive({
         x <- sample_inventory_collect() %>%
           filter(season_name == req(input$season))
 
-        if (input$summary_type == "all") {
+        if (req(input$inventory_summ) == "all") {
           x
 
         } else {
@@ -106,17 +137,17 @@ mod_samples_server <- function(id, src, season.df, tab) {
                      .default = NA_integer_
                    ))
 
-          x.grouped <- if (input$summary_type == "sample_type") {
-            x %>% group_by(species, sample_type)
-          } else if (input$summary_type == "sample_type_group") {
+          x.grouped <- if (input$inventory_summ == "sample_type") {
+            x %>% group_by(species, sample_type, sample_type_group)
+          } else if (input$inventory_summ == "sample_type_group") {
             x %>% group_by(species, sample_type_group)
           } else {
-            validate("invalid summary_type - please contact the database manager")
+            validate("invalid inventory_summ - please contact the database manager")
           }
 
           x.grouped %>%
-            summarise(package_count = n(),
-                      individual_seals_count = n_distinct(id_unique),
+            summarise(n_packages = n(),
+                      n_individual_animals = n_distinct(id_unique),
                       # n_pinniped_id = n_distinct(pinniped_id, na.rm = TRUE),
                       # n_on_the_fly = n_distinct(on_the_fly_unique, na.rm = TRUE),
                       # n_pup_afs_id = n_distinct(pup_afs_id, na.rm = TRUE),
@@ -125,18 +156,26 @@ mod_samples_server <- function(id, src, season.df, tab) {
                       n_adults_juveniles = sum(age_class %in% c("Adult", "Adult/Juvenile", "Juvenile")),
                       n_pups = sum(age_class %in% c("Pup")),
                       .groups = "drop") %>%
-            relocate(individual_seals_count, n_adults_juveniles, n_pups,
-                     .after = package_count)
+            relocate(n_individual_animals, n_adults_juveniles, n_pups,
+                     .after = n_packages)
         }
       })
 
 
       #-------------------------------------------------------------------------
+      # Sample types
+      sample_type <- reactive({
+        sample_inventory_collect()
+      })
+
+
+
+      #-------------------------------------------------------------------------
       tbl_output <- reactive({
-        tbl.df <- if (input$view == "sample_inventory") {
+        tbl.df <- if (input$summary == "inventory") {
           sample_inventory()
-        # } else if (input$view == "apw") {
-        #   apw()
+        } else if (input$summary == "type") {
+          sample_type()
         } else {
           validate("invalid samples - please contact the database manager")
         }
