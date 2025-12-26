@@ -5,7 +5,7 @@
 \alias{vec_tag_sort}
 \title{Intuitively sort by tag}
 \usage{
-tag_sort(data, col, .arrange = TRUE, .drop = TRUE)
+tag_sort(data, col, ..., .arrange = TRUE, .drop = TRUE)
 
 vec_tag_sort(x)
 }
@@ -14,6 +14,9 @@ vec_tag_sort(x)
 
 \item{col}{\if{html}{\out{<tidy-select>}} (link todo) Column of tag numbers;
 used to generate the tag sort column}
+
+\item{...}{Passed directly to \code{...} argument of \code{\link[dplyr:arrange]{dplyr::arrange()}},
+before the tag sort column. Ignored if \code{.arrange} is \code{FALSE}}
 
 \item{.arrange}{If \code{TRUE}, then sort the data frame by the tag sort column}
 
@@ -45,17 +48,20 @@ For instance, "345" become "0000000345", while "A21" becomes "A000000021".
 Thus, tag numbers of all numeric values will be sorted before
 tags with a letter for the first symbol.
 
-The arguments \code{.arrange} and \code{.drop} allow the user to conveniently specify if
+The arguments \code{.arrange} and \code{.drop} allow the user to specify if
 the data frame should be sorted by the tag sort column, and if the tag sort
 column should be dropped from the output, respectively.
+If \code{.arrange} is \code{TRUE}, then any variables passed via \code{...} are passed directly
+to \code{\link[dplyr:arrange]{dplyr::arrange()}} before the tag sort column.
 
 If you're working with a vector rather than a full data frame,
-use \code{vec_tag_sort}.
+use \code{\link[=vec_tag_sort]{vec_tag_sort()}}.
 }
 \examples{
 df <- data.frame(
   tag_primary = c("10", "A100", "A20", "5"),
-  tag = c("C99", "A100", "A20", "5")
+  tag = c("C99", "A100", "A20", "5"),
+  d = c(1, 2, 1, 2)
 )
 
 tag_sort(df, tag)

@@ -33,14 +33,20 @@
 ### Returns the radioButton widget for selecting the timing summary level
 ### choices argument is the choices that should be included
 .summaryTimingUI <- function(
-    ns, choices = .summary.timing.choices, choices.selected = "fs_single"
+    ns,
+    choices = .summary.timing.choices,
+    choices.selected = "fs_single"
 ) {
   choices.args <- match.arg(choices, several.ok = TRUE)
 
   if (!all(choices.args %in% .summary.timing.choices.list))
     stop("Need to update internal function - please contact the database manager")
 
-  choices.list <- intersect(.summary.timing.choices.list, choices.args)
+  # Need to do the in to keep as named list
+  choices.list <- .summary.timing.choices.list[
+    .summary.timing.choices.list %in% choices.args
+  ]
+  # choices.list <- intersect(.summary.timing.choices.list, choices.args)
 
   if (!(choices.selected %in% choices.list))
     stop("choices.selected must be one of the choices")

@@ -34,19 +34,13 @@ mod_phocid_census_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(
-            width = 4,
-            .summaryTimingUI(ns, c("fs_total", "fs_date_single", "fs_single")), #"fs_facet",
-            conditionalPanel(
-              condition = "input.summary_timing == 'fs_single'", ns = ns,
-              checkboxInput(ns("plot_cumsum"), "Plot cumulative sum", value = FALSE)
-            )
-          ),
+          column(4, .summaryTimingUI(ns, c("fs_total", "fs_date_single", "fs_single"))),
           column(4, .summaryLocationUI(ns, c("by_capewide", "by_beach"), "by_capewide")),
           column(4, .summarySpAgeSexUI(ns, c("by_sp", "by_sp_age_sex"), "by_sp"))
         ),
         conditionalPanel(
           condition = "input.summary_timing == 'fs_single'", ns = ns,
+          checkboxInput(ns("plot_cumsum"), "Plot cumulative sum", value = FALSE),
           helpText("Note that the output plot and table will have",
                    "'census_date_start', the date of the start of the census,",
                    "rather than 'census_date'")

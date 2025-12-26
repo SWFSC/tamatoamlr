@@ -5,6 +5,8 @@
 #' @param data A data frame, with a tag column
 #' @param col <tidy-select> (link todo) Column of tag numbers;
 #'   used to generate the tag sort column
+#' @param ... Passed directly to `...` argument of [dplyr::arrange()],
+#'   before the tag sort column. Ignored if `.arrange` is `FALSE`
 #' @param .arrange If `TRUE`, then sort the data frame by the tag sort column
 #' @param .drop If `TRUE`, then drop the tag sort column before returning the
 #'   data frame
@@ -30,17 +32,20 @@
 #' Thus, tag numbers of all numeric values will be sorted before
 #' tags with a letter for the first symbol.
 #'
-#' The arguments `.arrange` and `.drop` allow the user to conveniently specify if
+#' The arguments `.arrange` and `.drop` allow the user to specify if
 #' the data frame should be sorted by the tag sort column, and if the tag sort
 #' column should be dropped from the output, respectively.
+#' If `.arrange` is `TRUE`, then any variables passed via `...` are passed directly
+#' to [dplyr::arrange()] before the tag sort column.
 #'
 #' If you're working with a vector rather than a full data frame,
-#' use `vec_tag_sort`.
+#' use [vec_tag_sort()].
 #'
 #' @examples
 #' df <- data.frame(
 #'   tag_primary = c("10", "A100", "A20", "5"),
-#'   tag = c("C99", "A100", "A20", "5")
+#'   tag = c("C99", "A100", "A20", "5"),
+#'   d = c(1, 2, 1, 2)
 #' )
 #'
 #' tag_sort(df, tag)
@@ -50,7 +55,7 @@
 #'
 #' @name tag_sort
 #' @export
-tag_sort <- function(data, col, .arrange = TRUE, .drop = TRUE) {
+tag_sort <- function(data, col, ..., .arrange = TRUE, .drop = TRUE) {
   stopifnot(
     is_bool(.arrange),
     is_bool(.drop),
@@ -62,7 +67,7 @@ tag_sort <- function(data, col, .arrange = TRUE, .drop = TRUE) {
   # Get the column name
   # based on tidyr::build_longer_spec, via tidyr::pivot_longer
   col <- tidyselect::eval_select(
-    expr = enquo(col), data = data, allow_rename = FALSE
+    expr = col.enquo, data = data, allow_rename = FALSE
   )
   if (length(col) != 1) {
     cli::cli_abort("{.arg col} must select exactly one column.")
@@ -79,11 +84,12 @@ tag_sort <- function(data, col, .arrange = TRUE, .drop = TRUE) {
            .after = last_col())
 
   # Arrange and/or drop, as specified
-  if (.arrange) out <- out %>% arrange(col_sort)
+  if (.arrange) out <- out %>% arrange(..., col_sort)
 
   if (.drop) {
     out %>% select(-col_sort)
   } else {
+    # Can use this logic because of `.after = last_col()`
     names(out)[length(names(out))] <- col.sort
     out
   }

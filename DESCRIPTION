@@ -14,7 +14,7 @@ License: Apache License (== 2)
 BugReports: https://github.com/us-amlr/tamatoamlr/issues
 Depends: R (>= 4.1.0)
 Imports: 
-    amlrian (>= 1.0), 
+    amlrian (>= 1.1), 
     dplyr (>= 1.0),
     dbplyr, 
     cli, 
