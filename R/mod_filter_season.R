@@ -87,18 +87,21 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
 
         choices.all <- unlist(season_list())
 
+        # TODO: temporary workaround to not select NSF seasons
+        choices.sel <- choices.all[!str_detect(choices.all, "NSF")]
+
+        browser()
         if (summ.level() == "fs_single") {
           multi <- FALSE
           choices.sel <- max(choices.all)
           column.width <- 6
-          # } else if (summ.level() == "fs_mult_date") {
-          #   multi <- TRUE
-          #   choices.sel <- utils::head(unlist(season_list()), 6)
-          #   column.width = 12
+        } else if (summ.level() == "fs_mult_date") {
+          multi <- TRUE
+          choices.sel <- utils::head(choices.sel, 6)
+          column.width = 12
         } else {
           multi <- TRUE
-          # TODO: temporary workaround to not select NSF seasons
-          choices.sel <- choices.all[!str_detect(choices.all, "NSF")]
+          # choices.sel <- choices.all[!str_detect(choices.all, "NSF")]
           column.width <- 12
         }
 
@@ -143,36 +146,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       })
 
 
-      # ### Month dropdown
-      # output$month_uiOut_select <- renderUI({
-      #   req(summ.level() == "fs_mult_date", season.df())
-      #
-      #   months.named <- month.abb
-      #   names(months.named) <- month.name
-      #
-      #   # browser()
-      #   selectInput(
-      #     session$ns("month"), tags$h5("Select month"),
-      #     choices = months.named[c(10:12, 1:3)], selected = NULL
-      #   )
-      # })
-      #
-      # ### Day dropdown - depends on month value
-      # output$day_uiOut_select <- renderUI({
-      #   req(summ.level() == "fs_mult_date", season.df())
-      #   date.tmp <- ymd(paste("2000", req(input$month), "01", sep = "-"))
-      #   selectInput(
-      #     session$ns("day"), tags$h5("Select day"),
-      #     choices = 1:days_in_month(date.tmp), selected = NULL
-      #   )
-      # })
-      #
-      # ### Action button to select today
-      # output$today_uiOut_action <- renderUI({
-      #   req(summ.level() == "fs_mult_date", season.df())
-      #   actionButton(session$ns("today"), "Select today (todo)")
-      # })
-
+      ### Mult Date selector
       output$mult_date_uiOut_date <- renderUI({
         req(summ.level() == "fs_mult_date")
         date.lbl <- tags$h5(
@@ -201,14 +175,6 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       #   )
       # })
 
-      # #------------------------------------------------------------------------
-      # ### Set multi-date values to today
-      # observeEvent(input$today, {
-      #   d <- lubridate::today()
-      #   updateSelectInput(session, "month", selected = month.abb[month(d)])
-      #   updateSelectInput(session, "day", selected = day(d))
-      # }, ignoreInit = TRUE)
-
 
       #------------------------------------------------------------------------
       ### Return values
@@ -216,8 +182,6 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
         season = reactive(input$season),
         date_range = reactive(input$date_range),
         # week = reactive(input$week),
-        # month = reactive(input$month),
-        # day = reactive(input$day)
         mult_date = reactive(input$mult_date)
       )
     }
