@@ -16,10 +16,11 @@ mod_filter_season_ui <- function(id) {
       uiOutput(ns("season_uiOut_select")),
       uiOutput(ns("date_range_uiOut_dateRange"))
     ),
+    uiOutput(ns("season_uiOut_buttons")),
     fluidRow(
       # dateInput(ns("mult_date"), tags$h5("Select date"))
 
-      uiOutput(ns("mult_date_uiOut_date"))
+      uiOutput(ns("mult_date_uiOut"))
       # column(4, uiOutput(ns("month_uiOut_select"))),
       # column(4, uiOutput(ns("day_uiOut_select"))),
       # column(4, uiOutput(ns("today_uiOut_action")))
@@ -77,27 +78,30 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       # })
 
       #------------------------------------------------------------------------
-      ### Select season dropdown - could combine with min season, but left separate for now
+      ### Select season dropdown
+      amlr_seasons <- reactive({
+        choices.all <- unlist(season_list())
+        # TODO: temporary workaround to not select NSF seasons
+        choices.all[!str_detect(choices.all, "NSF")]
+      })
+
       output$season_uiOut_select <- renderUI({
         validate(
           need(summ.level() %in% .summary.timing.choices,
                paste("Invalid summ.level value in mod_filter_season_server -",
-                     "please contact thedatabase manager"))
+                     "please contact the database manager"))
         )
 
         choices.all <- unlist(season_list())
+        choices.sel <- amlr_seasons()
 
-        # TODO: temporary workaround to not select NSF seasons
-        choices.sel <- choices.all[!str_detect(choices.all, "NSF")]
-
-        browser()
         if (summ.level() == "fs_single") {
           multi <- FALSE
           choices.sel <- max(choices.all)
           column.width <- 6
         } else if (summ.level() == "fs_mult_date") {
           multi <- TRUE
-          choices.sel <- utils::head(choices.sel, 6)
+          choices.sel <- utils::head(choices.sel, 5)
           column.width = 12
         } else {
           multi <- TRUE
@@ -115,18 +119,28 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
         )
       })
 
+      output$season_uiOut_buttons <- renderUI({
+        req(summ.level() != "fs_single")
+
+        tagList(
+          actionButton(session$ns("season_all"), "Select all AMLR seasons"),
+          actionButton(session$ns("season_none"), "Clear selected"),
+          actionButton(session$ns("season_recent"), "Select recent")
+        )
+      })
+
 
       ### Date range - for single season only
       output$date_range_uiOut_dateRange <- renderUI({
         req(summ.level() == "fs_single", season.df(), input$season)
-        req(length(input$season == 1))
+        req(length(input$season) == 1)
 
         season.curr <- season.df() %>%
           filter(season_name == input$season)
 
+        # browser()
         validate(
-          need(nrow(season.curr) == 1,
-               "Error in mod_season_range_server.date_range_uiOut_dateRange")
+          need(nrow(season.curr) == 1, "Error in date_range_uiOut_dateRange")
         )
 
         start <- min <- season.curr[["season_open_date"]]
@@ -147,20 +161,25 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
 
 
       ### Mult Date selector
-      output$mult_date_uiOut_date <- renderUI({
+      output$mult_date_uiOut <- renderUI({
         req(summ.level() == "fs_mult_date")
-        date.lbl <- tags$h5(
-          "Select date"
-        )
+        # date.lbl <- tags$h5(
+        #   "Select date"
+        # )
 
         tagList(
-          column(4, dateInput(session$ns("mult_date"), date.lbl)),
+          column(6, dateInput(session$ns("mult_date"), tags$h5("Select date"))),
           # column(8, helpText("The year of the date selected does not matter;",
           #                    "only the month and day will be used")),
-          column(8, helpText("Select date for which you want to find the",
-                             "closest record(s) for all selected seasons.",
-                             "The year of the date selected does not matter;",
-                             "only the month and day will be used."))
+          column(6, numericInput(session$ns("mult_max_gap"), tags$h5("Max gap (days)"),
+                                 value = 7, min = 1, step = 1)),
+          column(12, helpText("Find the records closest to the selected date",
+                              "for all selected seasons.",
+                              "The year of the date does not matter;",
+                              "only the month and day will be used.",
+                              "The max gap is the maximum number of days",
+                              "between the record and the selected date",
+                              "for the record to be considered valid"))
         )
       })
 
@@ -177,13 +196,38 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
 
 
       #------------------------------------------------------------------------
+      observeEvent(input$season_all, {
+        updateSelectInput(session, "season", selected = amlr_seasons())
+      }, ignoreInit = TRUE)
+
+      observeEvent(input$season_recent, {
+        selected <- utils::head(amlr_seasons(), 5)
+        updateSelectInput(session, "season", selected = selected)
+      }, ignoreInit = TRUE)
+
+      observeEvent(input$season_none, {
+        updateSelectInput(session, "season", selected = list())
+      }, ignoreInit = TRUE)
+
+
+      #------------------------------------------------------------------------
+      out_season <- reactive({
+        validate(
+          need(input$season, "Please select at least one season")
+        )
+
+        input$season
+      })
+
       ### Return values
       list(
-        season = reactive(input$season),
+        season = out_season,
         date_range = reactive(input$date_range),
         # week = reactive(input$week),
-        mult_date = reactive(input$mult_date)
+        mult_date = reactive(input$mult_date),
+        mult_max_gap = reactive(input$mult_max_gap)
       )
     }
   )
 }
+

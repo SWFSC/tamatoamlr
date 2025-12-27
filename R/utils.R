@@ -147,14 +147,13 @@
 
 #-------------------------------------------------------------------------------
 ### For fs_mult_date summary: return the census data closest to given date
-.mult_date <- function(census.df, date.col, days.max, fs, vals) {
-  # req(fs$month(), fs$day())
-  # browser()
+.mult_date <- function(census.df, date.col, fs, vals) {
   date.col.enquo <- enquo(date.col)
 
   m <- month(req(fs$mult_date()))
   m.abb <- month.abb[m]
   d <- day(fs$mult_date())
+  max.gap <- req(fs$mult_max_gap())
 
   fs.date.df <- data.frame(
     season_name = req(fs$season()),
@@ -172,7 +171,7 @@
     filter(days_diff == min(days_diff))
 
   census.df.ds <- census.df.ds.orig %>%
-    filter(days_diff <= days.max) %>%
+    filter(days_diff <= max.gap) %>%
     select(-c(m, d, season_date)) %>%
     ungroup()
 
@@ -188,7 +187,7 @@
   validate(
     need(nrow(census.df.ds) > 0,
          glue("There are no records for the",
-              "selected season(s) within {days.max}",
+              "selected season(s) within {max.gap}",
               "days of the provided date of {d} {m.abb}"))
   )
 
@@ -203,8 +202,8 @@
       unlist()
 
     vals.warning <- paste(
-      "The following seasons have census records, but none within",
-      glue("{days.max} days of the provided date of {d} {m.abb}:"),
+      "The following season(s) have records, but none within",
+      glue("{max.gap} days of the provided date of {d} {m.abb}:"),
       paste(seasons.rmd, collapse = ", ")
     )
   } else {
