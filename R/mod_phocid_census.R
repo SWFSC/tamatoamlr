@@ -284,7 +284,7 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
           # census.df <- census.df.ds
           req(fs$mult_date())
           # out <- .mult_date(census.df, req(fs$season()), req(fs$mult_date()), 14)
-          census.df <- .mult_date(census.df, fs, 14, vals)
+          census.df <- .mult_date(census.df, census_date_start, 14, fs, vals)
           # census.df <- out[[1]]
           # vals$warning_date_single_filter <- out[[2]]
         }
@@ -501,12 +501,10 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
         y.lab <- if (input$plot_cumsum) "Count (cumulative sum)" else "Count"
 
         md <- if (input$summary_timing == "fs_mult_date") {
-          req(fs$mult_date())
           paste(day(fs$mult_date()), month.abb[month(fs$mult_date())])
         } else {
           ""
         }
-
 
         gg.title <- case_when(
           input$summary_timing == "fs_mult_total" ~

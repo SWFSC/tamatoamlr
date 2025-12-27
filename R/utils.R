@@ -147,9 +147,10 @@
 
 #-------------------------------------------------------------------------------
 ### For fs_mult_date summary: return the census data closest to given date
-.mult_date <- function(census.df, fs, days.max, vals) {
+.mult_date <- function(census.df, date.col, days.max, fs, vals) {
   # req(fs$month(), fs$day())
   # browser()
+  date.col.enquo <- enquo(date.col)
 
   m <- month(req(fs$mult_date()))
   m.abb <- month.abb[m]
@@ -165,7 +166,7 @@
     left_join(fs.date.df, by = "season_name") %>%
     mutate(season_date = amlr_date_from_season(season_name, m, d),
            days_diff = as.numeric(
-             difftime(census_date_start, season_date, units = "days")),
+             difftime(!!date.col.enquo, season_date, units = "days")),
            days_diff = if_else(days_diff < 0, abs(days_diff)-0.5, days_diff)) %>%
     group_by(season_name) %>%
     filter(days_diff == min(days_diff))
@@ -175,12 +176,14 @@
     select(-c(m, d, season_date)) %>%
     ungroup()
 
-  if (n_distinct(census.df.ds$season_name) !=
-      n_distinct(census.df.ds$census_phocid_header_id))
-    validate(paste("Error in phocid census fs_mult_date summaries -",
-                   "please contact the database manager"))
+  # if (n_distinct(census.df.ds$season_name) !=
+  #     n_distinct(census.df.ds$census_phocid_header_id)) {
+  #   validate(
+  #     paste("Error in census fs_mult_date summaries -",
+  #           "please contact the database manager")
+  #   )
+  # }
 
-  nrow.diff <- nrow(census.df.ds.orig) - nrow(census.df.ds)
 
   validate(
     need(nrow(census.df.ds) > 0,
@@ -190,6 +193,7 @@
   )
 
   # Warning message for seasons w/o census record close enough
+  nrow.diff <- nrow(census.df.ds.orig) - nrow(census.df.ds)
   if (nrow.diff != 0) {
     seasons.rmd <- census.df.ds.orig %>%
       filter(!(season_name %in% unique(census.df.ds$season_name))) %>%

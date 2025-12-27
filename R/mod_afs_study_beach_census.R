@@ -23,8 +23,8 @@ mod_afs_study_beach_census_ui <- function(id) {
         fluidRow(
           column(
             width = 4,
-            # .summaryTimingUI(ns, c("fs_date_single", "fs_single")),
-            .summaryTimingUI(ns, c("fs_single")),
+            .summaryTimingUI(ns, c("fs_mult_date", "fs_single")),
+            # .summaryTimingUI(ns, c("fs_single")),
           ),
           column(4, .summaryLocationUI(ns, c("by_amlr", "by_capewide", "by_beach"), "by_amlr", FALSE)),
           column(4, .summarySpAgeSexUI(ns, c("by_sp_age_sex"), "by_sp_age_sex"))
@@ -198,63 +198,65 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
         # Do additional date single filtering, if necessary
         # NOTE: if this is updated,
         #   you probably should update the code in mod_afs_study_beach_census
-        if (input$summary_timing == "fs_date_single") {
-          req(fs$month(), fs$day())
-          fs.date.df <- data.frame(
-            season_name = fs$season(),
-            m = fs$month(),
-            d = fs$day()
-          )
-          days.max <- 3
-
-          census.df.ds.orig <- census.df %>%
-            left_join(fs.date.df, by = "season_name") %>%
-            mutate(season_date = amlr_date_from_season(season_name, m, d),
-                   days_diff = as.numeric(
-                     difftime(census_date, season_date, units = "days")),
-                   days_diff = if_else(days_diff < 0, abs(days_diff)-0.5, days_diff)) %>%
-            group_by(season_name) %>%
-            filter(days_diff == min(days_diff))
-
-          census.df.ds <- census.df.ds.orig %>%
-            filter(days_diff <= days.max) %>%
-            select(-c(m, d, season_date)) %>%
-            ungroup()
-
-          if (length(unique(census.df.ds$season_name)) != length(unique(census.df.ds$census_date)))
-            validate(paste("Error in AFS study beach census data single summaries -",
-                           "please contact the database manager"))
-
-          nrow.diff <- nrow(census.df.ds.orig) - nrow(census.df.ds)
-
-          validate(
-            need(nrow(census.df.ds) > 0,
-                 paste("There are no census records for the",
-                       "selected season(s) within", days.max,
-                       "days of the provided date",
-                       paste0("(", fs$month(), " ", fs$day(), ")")))
-          )
-
-          # Warning message for seasons w/o census record close enough
-          if (nrow.diff != 0) {
-            seasons.rmd <- census.df.ds.orig %>%
-              filter(!(season_name %in% unique(census.df.ds$season_name))) %>%
-              distinct(season_name) %>%
-              arrange(season_name) %>%
-              select(season_name) %>%
-              unlist()
-
-            vals$warning_date_single_filter <- paste(
-              "The following seasons do not have study beach census records within",
-              days.max, "days of the provided date",
-              paste0("(", fs$month(), " ", fs$day(), "):"),
-              paste(seasons.rmd, collapse = ", ")
-            )
-          } else {
-            vals$warning_date_single_filter <- NULL
-          }
-
-          census.df <- census.df.ds
+        if (input$summary_timing == "fs_mult_date") {
+          # req(fs$month(), fs$day())
+          # fs.date.df <- data.frame(
+          #   season_name = fs$season(),
+          #   m = fs$month(),
+          #   d = fs$day()
+          # )
+          # days.max <- 3
+          #
+          # census.df.ds.orig <- census.df %>%
+          #   left_join(fs.date.df, by = "season_name") %>%
+          #   mutate(season_date = amlr_date_from_season(season_name, m, d),
+          #          days_diff = as.numeric(
+          #            difftime(census_date, season_date, units = "days")),
+          #          days_diff = if_else(days_diff < 0, abs(days_diff)-0.5, days_diff)) %>%
+          #   group_by(season_name) %>%
+          #   filter(days_diff == min(days_diff))
+          #
+          # census.df.ds <- census.df.ds.orig %>%
+          #   filter(days_diff <= days.max) %>%
+          #   select(-c(m, d, season_date)) %>%
+          #   ungroup()
+          #
+          # if (length(unique(census.df.ds$season_name)) != length(unique(census.df.ds$census_date)))
+          #   validate(paste("Error in AFS study beach census data single summaries -",
+          #                  "please contact the database manager"))
+          #
+          # nrow.diff <- nrow(census.df.ds.orig) - nrow(census.df.ds)
+          #
+          # validate(
+          #   need(nrow(census.df.ds) > 0,
+          #        paste("There are no census records for the",
+          #              "selected season(s) within", days.max,
+          #              "days of the provided date",
+          #              paste0("(", fs$month(), " ", fs$day(), ")")))
+          # )
+          #
+          # # Warning message for seasons w/o census record close enough
+          # if (nrow.diff != 0) {
+          #   seasons.rmd <- census.df.ds.orig %>%
+          #     filter(!(season_name %in% unique(census.df.ds$season_name))) %>%
+          #     distinct(season_name) %>%
+          #     arrange(season_name) %>%
+          #     select(season_name) %>%
+          #     unlist()
+          #
+          #   vals$warning_date_single_filter <- paste(
+          #     "The following seasons do not have study beach census records within",
+          #     days.max, "days of the provided date",
+          #     paste0("(", fs$month(), " ", fs$day(), "):"),
+          #     paste(seasons.rmd, collapse = ", ")
+          #   )
+          # } else {
+          #   vals$warning_date_single_filter <- NULL
+          # }
+          #
+          # census.df <- census.df.ds
+          req(fs$mult_date())
+          census.df <- .mult_date(census.df, census_date, 3, fs, vals)
         }
 
         # if (input$summary_timing == "fs_week") {
@@ -350,100 +352,104 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
       })
 
 
-        #-------------------------------------------------------------------------
-        ### Output plot
-        plot_output <- reactive({
-          census.df.orig <- census_df()
+      #-------------------------------------------------------------------------
+      ### Output plot
+      plot_output <- reactive({
+        census.df.orig <- census_df()
+        fs <- filter_season()
 
-          #--------------------------------------------------------
-          # Set some plot variable depending on user selections
-          if (input$summary_timing %in% .summary.timing.single) {
-            x.val <- as.name("census_date")
-            x.lab <- "Date"
-          } else if (input$summary_timing %in% .summary.timing.multiple) {
-            x.val <- as.name("season_name")
-            x.lab <- "Season"
-          } else {
-            validate("census plot - invalid input$summary_timing value")
-          }
+        #--------------------------------------------------------
+        # Set some plot variable depending on user selections
+        if (input$summary_timing %in% .summary.timing.single) {
+          x.val <- as.name("census_date")
+          x.lab <- "Date"
+        } else if (input$summary_timing %in% .summary.timing.multiple) {
+          x.val <- as.name("season_name")
+          x.lab <- "Season"
+        } else {
+          validate("census plot - invalid input$summary_timing value")
+        }
 
-          y.lab <- "Count"
+        y.lab <- "Count"
+        md <- if (input$summary_timing == "fs_mult_date") {
+          paste(day(fs$mult_date()), month.abb[month(fs$mult_date())])
+        } else {
+          ""
+        }
 
-          fs <- filter_season()
-          gg.title <- case_when(
-            input$summary_timing == "fs_total" ~
-              "AFS Study Beach Census - Totals by Season",
-            input$summary_timing == "fs_date_single" ~
-              paste("AFS Study Beach Census - Closest to", fs$month(), fs$day()),
-            # input$summary_timing == "fs_date_single" ~ "Phocid Census - Closest to Date",
-            input$summary_timing == "fs_single" ~
-              paste("AFS Study Beach Census -", fs$season()),
-            TRUE ~ "Title todo"
-          )
+        gg.title <- case_when(
+          # input$summary_timing == "fs_mult_total" ~
+          #   "AFS Study Beach Census - Totals by Season",
+          input$summary_timing == "fs_mult_date" ~
+            paste("AFS Study Beach Census - Closest to", md),
+          input$summary_timing == "fs_single" ~
+            paste("AFS Study Beach Census -", fs$season()),
+          TRUE ~ "Title todo"
+        )
 
-          if (input$summary_location == "by_beach") {
-            guide_legend_color <- guide_legend(title = "Location")
-            guide_legend_shape <- guide_legend(title = "Sex / age class", order = 1)
-            color.val <- as.name("location_fctr")
-            shape.val <- as.name("count_class")
-          } else {
-            guide_legend_color <- guide_legend(title = "Sex / age class")
-            guide_legend_shape <- "none"
-            color.val <- as.name("count_class")
-            shape.val <- as.name("location_fctr")
-          }
-
-
-          #--------------------------------------------------------
-          # This processing is done here so that output$tbl is wide
-          census.df <- if (input$summary_location == "by_beach") {
-            census.df.orig %>% mutate(location_fctr = factor(location_group))
-          } else {
-            census.df.orig %>% mutate(location_fctr = "1")
-          }
-
-          census.df <- census.df %>%
-            select(-n_records) %>%
-            pivot_longer(cols = where(is.numeric), names_to = "count_class",
-                         values_to = "count_value") %>%
-            arrange_season(season.df(), !!!syms(grp_names_chr()), count_class)
-
-          validate(need(nrow(census.df) > 0, "No data to plot"))
+        if (input$summary_location == "by_beach") {
+          guide_legend_color <- guide_legend(title = "Location")
+          guide_legend_shape <- guide_legend(title = "Sex / age class", order = 1)
+          color.val <- as.name("location_fctr")
+          shape.val <- as.name("count_class")
+        } else {
+          guide_legend_color <- guide_legend(title = "Sex / age class")
+          guide_legend_shape <- "none"
+          color.val <- as.name("count_class")
+          shape.val <- as.name("location_fctr")
+        }
 
 
-          #--------------------------------------------------------
-          # Plotting
-          # Always: color is sex/age class, shape is beach
-          ggplot.out <- ggplot(census.df, aes(x = !!x.val, y = count_value)) +
-            geom_point(aes(color = !!color.val, shape = !!shape.val)) +
-            geom_line(aes(group = interaction(count_class, location_fctr),
-                          color = !!color.val)) +
-            # scale_color_manual(values = tamatoamlr::pinniped.sp.colors[input$species],
-            #                    drop = FALSE) +
-            guides(color = guide_legend_color, linetype = "none",
-                   shape = guide_legend_shape, size = "none")+
-            xlab(x.lab) +
-            ylab(y.lab) +
-            ggtitle(gg.title) +
-            theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+        #--------------------------------------------------------
+        # This processing is done here so that output$tbl is wide
+        census.df <- if (input$summary_location == "by_beach") {
+          census.df.orig %>% mutate(location_fctr = factor(location_group))
+        } else {
+          census.df.orig %>% mutate(location_fctr = "1")
+        }
 
-          ggplot.out <- if (input$summary_timing %in% .summary.timing.single) {
-            ggplot.out +
-              scale_x_date(breaks = sort(unique(census.df$census_date)),
-                           date_labels = "%d %b %Y") +
-              expand_limits(y = 0)
-          } else if (input$summary_timing %in% .summary.timing.multiple){
-            ggplot.out +
-              expand_limits(x = req(fs$season()), y = 0)
-          }
+        census.df <- census.df %>%
+          select(-n_records) %>%
+          pivot_longer(cols = where(is.numeric), names_to = "count_class",
+                       values_to = "count_value") %>%
+          arrange_season(season.df(), !!!syms(grp_names_chr()), count_class)
 
-          # Output
-          ggplot.out
-        })
+        validate(need(nrow(census.df) > 0, "No data to plot"))
 
-        #-------------------------------------------------------------------------
-        ### Send off
-        observe(mod_output_server("out", tbl_output, plot_output))
+
+        #--------------------------------------------------------
+        # Plotting
+        # Always: color is sex/age class, shape is beach
+        ggplot.out <- ggplot(census.df, aes(x = !!x.val, y = count_value)) +
+          geom_point(aes(color = !!color.val, shape = !!shape.val)) +
+          geom_line(aes(group = interaction(count_class, location_fctr),
+                        color = !!color.val)) +
+          # scale_color_manual(values = tamatoamlr::pinniped.sp.colors[input$species],
+          #                    drop = FALSE) +
+          guides(color = guide_legend_color, linetype = "none",
+                 shape = guide_legend_shape, size = "none")+
+          xlab(x.lab) +
+          ylab(y.lab) +
+          ggtitle(gg.title) +
+          theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+        ggplot.out <- if (input$summary_timing %in% .summary.timing.single) {
+          ggplot.out +
+            scale_x_date(breaks = sort(unique(census.df$census_date)),
+                         date_labels = "%d %b %Y") +
+            expand_limits(y = 0)
+        } else if (input$summary_timing %in% .summary.timing.multiple){
+          ggplot.out +
+            expand_limits(x = req(fs$season()), y = 0)
+        }
+
+        # Output
+        ggplot.out
+      })
+
+      #-------------------------------------------------------------------------
+      ### Send off
+      observe(mod_output_server("out", tbl_output, plot_output))
     }
-      )
+  )
 }
