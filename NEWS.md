@@ -2,6 +2,8 @@
 
 * Renamed package to `tamatoamlr`
 
+* Package now depends on v1.1+ of the `amlrian` package (previously `amlrDatabases`)
+
 * Updated licence to Apache 2.0 to match current NMFS recommendations
 
 * Added `dbplyr` to Imports to explicitly require it for database work
@@ -18,9 +20,11 @@
 
 * Added tests for `dcc`, `csphoc`, and `cwp` functions [e.g., #6]
 
-* Added "Punta Las Torres" and "Penguin Colonies" to variable csphoc.core.location.groups
+* Added "Punta Las Torres" and "Penguin Colonies" to variable `csphoc.core.location.groups`
 
-* Updated `tamatoa` to only allow pre-defined connections via a filedsn argument, and to work with amlrDatabases (>= v0.7) modules, especially database connection
+* Updated `tamatoa` to only allow pre-defined connections via a filedsn argument
+
+* Added `mult_date_filter` for filtering census data frames for the closest records from each season to a given date.
 
 
 # amlrPinnipeds 0.5.0

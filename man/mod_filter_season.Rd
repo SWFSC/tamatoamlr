@@ -11,7 +11,7 @@ mod_filter_season_ui(id)
 mod_filter_season_server(id, summ.level, season.df)
 }
 \arguments{
-\item{id}{character used to specify namespace, see \code{shiny::\link[shiny]{NS}}}
+\item{id}{character used to specify namespace, see \code{\link[shiny:NS]{shiny::NS()}}}
 
 \item{summ.level}{a reactive of the 'summary level one' selection. Value must
 be one of: TODO}
@@ -23,9 +23,13 @@ first element (\code{season.df}) of the (list) output of
 \value{
 A list with following components:
 \itemize{
-\item{season: reactive character, the name(s) of the selected season(s)}
+\item{season: reactive character, the name(s) of the selected season(s).
+Passes validate message if no seasons are selected}
 \item{date_range: reactive Date vector of length 2; the date range for a single season}
-\item{week: reactive character; the week to select for, across multiple seasons}
+\item{mult_date: reactive Date; date used to filter for records close to it, for all selected seasons."}
+\item{mult_max_gap: reactive numeric; maximum number of days between the
+record and the selected date (mult_date) for the record to be considered
+valid}
 }
 }
 \description{

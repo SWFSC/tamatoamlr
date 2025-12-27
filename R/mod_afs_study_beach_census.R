@@ -37,7 +37,7 @@ mod_afs_study_beach_census_ui <- function(id) {
     mod_output_ui(
       ns("out"),
       tags$br(), uiOutput(ns("warning_na_records")),
-      uiOutput(ns("warning_date_single_filter"))
+      uiOutput(ns("warning_mult_date_filter"))
     )
   )
 }
@@ -73,7 +73,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
       # Census-specific common values
       vals <- reactiveValues(
         warning_na_records = NULL,
-        warning_date_single_filter = NULL
+        warning_mult_date_filter = NULL
       )
 
 
@@ -85,8 +85,8 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
         span(req(vals$warning_na_records), style = "color:red;")
       })
 
-      output$warning_date_single_filter <- renderUI({
-        span(req(vals$warning_date_single_filter), style = "color:red;")
+      output$warning_mult_date_filter <- renderUI({
+        span(req(vals$warning_mult_date_filter), style = "color:red;")
       })
 
       ### Locations dropdown
@@ -178,7 +178,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
       ### Filter data by species, season/date, and remove NA values
       census_df_filter_season <- reactive({
         census.df.orig <- census_df_collect()
-        vals$warning_date_single_filter <- NULL
+        vals$warning_mult_date_filter <- NULL
         #----------------------------------------------
         # Filter by season/date/week num
         fs <- filter_season()
@@ -199,7 +199,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
         # Do additional date single filtering, if necessary
         if (input$summary_timing == "fs_mult_date") {
           req(fs$mult_date())
-          census.df <- .mult_date(census.df, census_date, fs, vals)
+          census.df <- mult_date_filter(census.df, census_date, fs, vals)
         }
 
         #----------------------------------------------

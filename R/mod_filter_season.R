@@ -4,7 +4,7 @@
 #'
 #' @name mod_filter_season
 #'
-#' @param id character used to specify namespace, see \code{shiny::\link[shiny]{NS}}
+#' @param id character used to specify namespace, see [shiny::NS()]
 #'
 #' @export
 mod_filter_season_ui <- function(id) {
@@ -47,9 +47,13 @@ mod_filter_season_ui <- function(id) {
 #'
 #' @return A list with following components:
 #' \itemize{
-#'   \item{season: reactive character, the name(s) of the selected season(s)}
+#'   \item{season: reactive character, the name(s) of the selected season(s).
+#'   Passes validate message if no seasons are selected}
 #'   \item{date_range: reactive Date vector of length 2; the date range for a single season}
-#'   \item{week: reactive character; the week to select for, across multiple seasons}
+#'   \item{mult_date: reactive Date; date used to filter for records close to it, for all selected seasons."}
+#'   \item{mult_max_gap: reactive numeric; maximum number of days between the
+#'   record and the selected date (mult_date) for the record to be considered
+#'   valid}
 #' }
 #'
 #' @export
@@ -68,17 +72,9 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
         as.list(req(season.df())$season_name)
       })
 
-      # season_month_day_min <- reactive({
-      #   season.df <- req(season.df())
-      #
-      #   open.min <- season.df$season_open_date[which.min(lubridate::yday(season.df$season_open_date))]
-      #   close.max <- season.df$season_close_date[which.max(lubridate::yday(season.df$season_close_date))]
-      #
-      #   list()
-      # })
 
       #------------------------------------------------------------------------
-      ### Select season dropdown
+      ### Select season dropdown, and associated selector buttons
       amlr_seasons <- reactive({
         choices.all <- unlist(season_list())
         # TODO: temporary workaround to not select NSF seasons
@@ -130,6 +126,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       })
 
 
+      #------------------------------------------------------------------------
       ### Date range - for single season only
       output$date_range_uiOut_dateRange <- renderUI({
         req(summ.level() == "fs_single", season.df(), input$season)
@@ -160,6 +157,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       })
 
 
+      #------------------------------------------------------------------------
       ### Mult Date selector
       output$mult_date_uiOut <- renderUI({
         req(summ.level() == "fs_mult_date")
@@ -184,6 +182,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       })
 
 
+      #------------------------------------------------------------------------
       # # Week dropdown - for multiple season by week only
       # output$week_uiOut_select <- renderUI({
       #   req(summ.level() == "fs_week", input$season)
@@ -196,6 +195,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
 
 
       #------------------------------------------------------------------------
+      ### Selector button events
       observeEvent(input$season_all, {
         updateSelectInput(session, "season", selected = amlr_seasons())
       }, ignoreInit = TRUE)
@@ -211,6 +211,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
 
 
       #------------------------------------------------------------------------
+      ### Validate/need if no seasons are selected
       out_season <- reactive({
         validate(
           need(input$season, "Please select at least one season")
