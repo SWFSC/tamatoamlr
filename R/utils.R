@@ -74,8 +74,8 @@
   choices.args <- match.arg(choices, several.ok = TRUE)
 
   choices.list.all <- list(
-    "AMLR study beaches" = "by_amlr",
     "Cape-wide" = "by_capewide",
+    "AMLR study beaches" = "by_amlr",
     "By beach" = "by_beach"
   )
 

@@ -32,7 +32,7 @@ mod_afs_capewide_pup_census_ui <- function(id) {
                         value = FALSE)
         ),
         conditionalPanel(
-          condition = "input.summary_location == 'by_beach' & input.summary_timing != 'fs_raw'",
+          condition = "(input.summary_location == 'by_beach' | input.summary_location == 'by_amlr') & input.summary_timing != 'fs_raw'",
           ns = ns,
           checkboxInput(ns("loc_agg"), "Aggregate across selected locations",
                         value = FALSE)
@@ -160,6 +160,14 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       ##########################################################################
       # Filter collected data
 
+      loc_agg <- reactive({
+        summ.loc <- (
+          input$summary_location == "by_beach" ||
+            input$summary_location == "by_amlr")
+
+        input$loc_agg && summ.loc &&input$summary_timing != "fs_raw"
+      })
+
       #-------------------------------------------------------------------------
       ### Filter data by species, season/date, and remove NA values
       census_df_filter_season <- reactive({
@@ -250,7 +258,6 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
             filter(location %in% input$location) %>%
             mutate(location = factor(location, levels = input$location))
         } else if(input$summary_location == "by_amlr") {
-          validate("Summary in development") # TODO: errors in outputs
           census.df <- census.df %>%
             filter(location %in% .amlr.beaches) %>%
             mutate(location = factor(location, levels = .amlr.beaches))
@@ -268,11 +275,6 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       # ##########################################################################
       # Process data for plot / table
 
-      loc_agg <- reactive({
-        (input$loc_agg && (input$summary_location == "by_beach")) |
-          (input$summary_location == "by_amlr")
-      })
-
       #----------------------------------------------------
       ### Table and plot for fs_single summaries
       ## Table
@@ -287,9 +289,10 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       plot_fs_single <- reactive({
         x <- census_df_filter_location()
 
-        g.title <- paste("Cape Shirreff AFS Capewide Pup Census",
-                         "Individual Counts", unique(x$season_name),
-                         sep = " - ")
+        g.title <- glue(
+          "Cape Shirreff AFS Capewide Pup Census Individual Counts - ",
+          "{unique(x$season_name)}"
+        )
 
         # If aggregating across locations, run agg function and update title
         # Also update location name in df in case many locations were aggregated
@@ -297,7 +300,9 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
           x.agg <- cwp_loc_agg(x)
           g.title <- paste(g.title, unique(x.agg$location), sep = " - ")
           x <- x.agg %>%
-            mutate(location = "Selected locations")
+            mutate(location = "Aggregated locations")
+        } else if (input$summary_location == "by_amlr") {
+          g.title <- glue("{g.title} - AMLR Study Beaches")
         }
 
         x <- x %>%
@@ -331,7 +336,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       census_df_fs_total <- reactive({
         census.df <- census_df_filter_location()
 
-        if (input$summary_location %in% c("by_beach", "by_amlr")) {
+        if (input$summary_location %in% c("by_beach")) {
           cwp_total_by_loc(census.df, loc.agg = loc_agg()) %>%
             rename(count_mean = count_loc_mean,
                    count_var = count_loc_var,
@@ -357,7 +362,9 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
         if (loc_agg()) {
           g.title <- paste(g.title, unique(x$location), sep = " - ")
           x <- x %>%
-            mutate(location = "Selected locations")
+            mutate(location = "Aggregated locations")
+        } else if (input$summary_location == "by_amlr") {
+          g.title <- glue("{g.title} - AMLR Study Beaches")
         }
 
         g.out <- if (input$summary_location == "by_beach") {
