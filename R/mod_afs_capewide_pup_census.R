@@ -6,36 +6,35 @@ mod_afs_capewide_pup_census_ui <- function(id) {
   # assemble UI elements
   tagList(
     fluidRow(
-      box(
-        title = "Filters", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Filters", width = 6,
         fluidRow(
           column(12, mod_filter_season_ui(ns("filter_season")))
         ),
         uiOutput(ns("location_uiOut_selectize"))
       ),
-      box(
-        title = "Summary options", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Summary options", width = 6,
         helpText("This tab allows you to summarize and visualize",
                  "AFS Capewide Pup Census data. ",
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         # TODO: add notes about CWP data from other years and eg SSI surveys
         fluidRow(
-          column(4, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_raw"))),
-          column(3, .summaryLocationUI(ns, c("by_capewide", "by_beach"), "by_capewide", FALSE)),
-          column(
-            width = 4,
-            conditionalPanel(
-              condition = "input.summary_location == 'by_beach' & input.summary_timing != 'fs_raw'",
-              ns = ns,
-              checkboxInput(ns("loc_agg"), "Aggregate across selected locations",
-                            value = FALSE)
-            )
-          )
+          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_raw"))),
+          column(6, .summaryLocationUI(ns, c("by_capewide", "by_amlr", "by_beach"),
+                                       "by_capewide", FALSE))
         ),
         conditionalPanel(
           condition = "input.summary_timing == 'fs_single'", ns = ns,
-          checkboxInput(ns("exclude_count"), "Remove data with the 'exclude_count' flag",
+          checkboxInput(ns("exclude_count"),
+                        "Remove data with the 'exclude_count' flag set to TRUE",
+                        value = FALSE)
+        ),
+        conditionalPanel(
+          condition = "input.summary_location == 'by_beach' & input.summary_timing != 'fs_raw'",
+          ns = ns,
+          checkboxInput(ns("loc_agg"), "Aggregate across selected locations",
                         value = FALSE)
         ),
         uiOutput(ns("exclude_count_uiOut_helptext"))
@@ -95,15 +94,20 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
           helpText("The 'Single Season'",
                    "summary is for reviewing data for count consistency.",
                    "In the table below, the order of the data in the columns",
-                   "with multiple data is is consistent across all columns")
+                   "with multiple data is is consistent across all columns.",
+                   tags$br(), tags$br(),
+                   "Note: If 'By beach' is selected and",
+                   "'Aggregate across selected locations' is checked,",
+                   "then data with the 'exclude_count' flag will always",
+                   "be removed before aggregating by location")
         } else if (input$summary_timing == "fs_mult_total") {
           helpText("Note: Data with the 'exclude_count' flag will always",
-                   "be removed when plotting over multiple seasons")
+                   "be removed when summarizing over multiple seasons")
         }  else if (input$summary_timing == "fs_raw") {
           helpText("Note: All data, including entries where the 'exclude_count'",
                    " flag is TRUE, are included in the raw data output")
         } else {
-          stop("Invalid input$summary_timing")
+          .validate_else("summary_timing")
         }
       })
 
@@ -173,7 +177,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
                    between(census_date,
                            !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
         } else {
-          validate("invalid input$summary_timing value")
+          .validate_else("summary_timing")
         }
 
         # TODO: add warning message about time of year if 2021/22 data is included
@@ -192,33 +196,43 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       ### Filter data that has been specified to be excluded
       census_df_filter_exclude <- reactive({
         census.df <- census_df_filter_season()
+        vals$warning_na_records <- NULL
 
         if (input$summary_timing == "fs_mult_total") {
           census.df <- census.df %>% filter(!exclude_count)
-          vals$warning_na_records <- NULL
 
-        } else if (input$summary_timing == "fs_single" && input$exclude_count) {
-          census.df.orig <- census.df
-          census.df <- census.df.orig %>% filter(!exclude_count)
-
-          nrow.diff <- nrow(census.df.orig) - nrow(census.df)
-          vals$warning_na_records <- if (nrow.diff != 0) {
-            paste(
-              "Note:", nrow.diff,
-              ifelse(nrow.diff == 1, "row was", "rows were"),
-              "removed because of a exclude_count flag"
+        } else if (input$summary_timing == "fs_single") {
+          if (loc_agg()) {
+            validate(
+              need(input$exclude_count,
+                   paste("If locations are being aggregated, then the",
+                         "'exclude_count' box must be checked")
+              )
             )
-          } else {
-            NULL
           }
 
-        } else {
-          vals$warning_na_records <- NULL
+          if (input$exclude_count) {
+            census.df.orig <- census.df
+            census.df <- census.df.orig %>% filter(!exclude_count)
+
+            nrow.diff <- nrow(census.df.orig) - nrow(census.df)
+            nrow.diff.phrase <- ifelse(nrow.diff == 1, "row was", "rows were")
+            vals$warning_na_records <- if (nrow.diff != 0) {
+              glue(
+                "Note: {nrow.diff} {nrow.diff.phrase} removed because of ",
+                "an 'exclude_count' flag"
+              )
+            } else {
+              NULL
+            }
+          }
         }
 
         validate(
-          need(nrow(census.df) > 0,
-               "No data to process after removing exclude_count rows")
+          need(
+            nrow(census.df) > 0,
+            "No data to process after removing 'exclude_count' rows"
+          )
         )
 
         census.df
@@ -235,6 +249,11 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
           census.df <- census.df %>%
             filter(location %in% input$location) %>%
             mutate(location = factor(location, levels = input$location))
+        } else if(input$summary_location == "by_amlr") {
+          validate("Summary in development") # TODO: errors in outputs
+          census.df <- census.df %>%
+            filter(location %in% .amlr.beaches) %>%
+            mutate(location = factor(location, levels = .amlr.beaches))
         }
 
         validate(
@@ -250,9 +269,11 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       # Process data for plot / table
 
       loc_agg <- reactive({
-        input$loc_agg && (input$summary_location == "by_beach")
+        (input$loc_agg && (input$summary_location == "by_beach")) |
+          (input$summary_location == "by_amlr")
       })
 
+      #----------------------------------------------------
       ### Table and plot for fs_single summaries
       ## Table
       census_df_fs_single <- reactive({
@@ -304,12 +325,13 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       })
 
 
+      #----------------------------------------------------
       ### Table and plot for fs_mult_total summaries
       ## Table
       census_df_fs_total <- reactive({
         census.df <- census_df_filter_location()
 
-        if (input$summary_location == "by_beach") {
+        if (input$summary_location %in% c("by_beach", "by_amlr")) {
           cwp_total_by_loc(census.df, loc.agg = loc_agg()) %>%
             rename(count_mean = count_loc_mean,
                    count_var = count_loc_var,
@@ -387,7 +409,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
         } else if (input$summary_timing == "fs_mult_total") {
           census_df_fs_total()
         } else {
-          validate("This summary is in development")
+          .validate_else("summary_timing")
         }
       })
 
@@ -402,7 +424,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
         } else if (input$summary_timing == "fs_mult_total") {
           plot_fs_total()
         } else {
-          validate("This plot is in development")
+          .validate_else("summary_timing")
         }
       })
 

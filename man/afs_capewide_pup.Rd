@@ -6,31 +6,40 @@
 \alias{cwp_review}
 \alias{cwp_total_by_loc}
 \alias{cwp_total}
-\title{Summarize AFS Capewide Pup Census Data}
+\title{Summarize AFS CWP Census Data}
 \usage{
-cwp_loc_agg(x)
+cwp_loc_agg(x, verbose = TRUE)
 
 cwp_review(x, loc.agg = FALSE)
 
-cwp_total_by_loc(x, loc.agg = FALSE)
+cwp_total_by_loc(x, loc.agg = FALSE, verbose = TRUE)
 
-cwp_total(x, x.byloc = FALSE, loc.agg = FALSE)
+cwp_total(x, x.byloc = FALSE, loc.agg = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{x}{data frame; output of \code{\link[=tbl_vCensus_AFS_Capewide_Pup]{tbl_vCensus_AFS_Capewide_Pup()}} or
 equivalent. The exception is if \code{x.byloc == TRUE}; in this case then \code{x}
 must be the output of \code{cwp_total_by_loc()}}
 
-\item{loc.agg}{logical; indicates if \code{cwp_review()} should aggregate records
-across location (by observer) before summarizing (\code{TRUE}), or if records
-should be summarized by season/location as-is (\code{FALSE}; default).}
+\item{verbose}{logical; should a message be printed stating how many records
+with \code{exclude_count == TRUE} were removed from \code{x} before processing?}
+
+\item{loc.agg}{logical; if \code{TRUE}, then records will be aggregated by season
+and observer across all locations in \code{x} before doing further summarizing.
+This option is intended for situations where e.g. puppies moved between
+beaches between observer counts, and the user wants to aggregate counts
+before reviewing to see if recounts are needed}
 
 \item{x.byloc}{logical; indicates if \code{x} is the output of
-\code{cwp_total_by_loc()}. This argument is intended to minimize work if a user
-needs both the output of \code{cwp_total_by_loc()} and \code{cwp_total()}}
+\code{cwp_total_by_loc()}. This argument is intended for times where the user
+needs both the output of \code{cwp_total_by_loc()} and \code{cwp_total()}
+Specifically, it allows the user to pass the output of \code{cwp_total_by_loc()}
+directly to \code{cwp_total()} as \code{x}, rather than \code{cwp_total()} needing to run
+\code{cwp_total_by_loc()} again. is intended to minimize work if a user needs
+both the output of \code{cwp_total_by_loc()} and \code{cwp_total()}}
 }
 \value{
-An ungrouped object of the same tpye as \code{x}, with the summarized AFS
+An ungrouped object of the same type as \code{x}, with the summarized AFS
 Capewide Pup Census data. The summary options are described in 'Details'.
 
 For all functions except \code{cwp_total()}: if 'census_afs_capewide_pup_sort'
@@ -39,50 +48,56 @@ by 'census_afs_capewide_pup_sort' (after being sorted first by the column
 'season_name').
 }
 \description{
-Summarize AFS Capewide Pup (CWP) Census Data
+Summarize AFS Cape-wide Pup (CWP) Census Data
 }
 \details{
 Function-specific details:
 \itemize{
 \item \code{cwp_loc_agg()}: Aggregate pup counts and related info across
-locations, and by season/observer. This function is intended for situations
-where a user has filtered CWP data for a specific subset of locations and
-wants to summarize the counts across all of these locations, effectively
-treating all of the locations as one location.
+locations, grouping by season and observer. This function is intended for
+situations where a user has filtered CWP data for a specific subset of
+locations and wants to work with the counts across all of these locations,
+effectively treating all of the selected locations as one location.
 \item \code{cwp_review()}: Summarize pup counts and ancillary information for review
-after grouping by season_name and location. \code{loc.agg == TRUE} then all
-counts will be summed by observer across locations, i.e., \code{x} will be
-passed to \code{cwp_loc_agg()}, before being summarized. The output data frame
-is various pasted conglomerations that are intended for review to help
-determine if recounts need to happen.
-\item \code{cwp_total_by_loc()}: group by season_name and location; return count mean,
-variance, SD, and min date. Calculating the variance and SD follow Cape
-Shirref/AMLR-specific rules about when it must be NA based on historical
-knowledge about past survey data. See the 'assumptions' section for
-details. census_date_min is the earliest census date for that
-season/location group. Records with
-\item \code{cwp_total()}: after running cwp_total_by_loc, group by season name and
-return counts and standard deviations
+after grouping by season_name and location. If \code{loc.agg == TRUE} then all
+counts will be summed by observer across locations. Specifically, \code{x} will be
+passed to \code{cwp_loc_agg()}, before being summarized. The output data frame is
+various pasted conglomerations that are intended for within-season review to
+help determine if recounts are needed.
+\item \code{cwp_total_by_loc()}: group by season_name and location, and return count mean,
+variance, SD, and min census date (across locations). Calculating the
+variance and SD follow Cape Shirreff/AMLR-specific rules about when it must
+be \code{NA}. These rules are based on historical knowledge about past survey
+data. See the 'assumptions' section below for further details. The min census
+date is the earliest census date for that season/location group.
+\item \code{cwp_exclude_count()} removes any records with an 'exclude_count' flag,
+i.e., with \code{exclude_count == TRUE} for that record. If \code{verbose} is \code{TRUE}
+(default), then a message will be printed via \code{\link[base:message]{base::message()}}.
+\item \code{cwp_total()}: after running \code{cwp_total_by_loc()}, group by season name and
+return counts and standard deviations.
 }
 
 Note that none of these functions do any rounding. To round values, for
-instance to get a whole number for pup counts, users may use functions such
-as \code{\link[base:Round]{base::round()}} or \code{\link[amlrian:round_logical]{amlrian::round_logical()}}
+instance to get a whole number for pup counts, use functions such as
+\code{\link[base:Round]{base::round()}} or \code{\link[amlrian:round_logical]{amlrian::round_logical()}}
 
-The cwp functions make several assumptions specific to U.S. AMLR Pinniped
+Also note that the functions \code{cwp_loc_agg()} and \code{cwp_total_by_loc()}
+always remove any records with an 'exclude_count' flag before processing.
+
+Assumptions: The 'cwp' functions make several assumptions specific to U.S. AMLR Pinniped
 Data:
 \itemize{
 \item The research program values are unique when considered by season
 \item Study beaches (locations: Copihue, Maderas, Cachorros, Chungungo)
-censused between 2008-07-01 and 2011-07-01 are single counts and thus do
-not have variance values.
+censused between 1 July 2008 and 1 July 2011 were recorded as single counts,
+and thus do not have variance values.
 \item All counts before July 2008 (i.e., before the 2008/09 season)
-do not have variance values.
+do not have valid variance values.
 }
 }
 \examples{
 \dontshow{if (FALSE) withAutoprint(\{ # examplesIf}
-  # Not run; examples only will run if `con` is a valid database connection
+  # Not run; examples only will run if 'con' is a valid database connection
   con <- odbc::dbConnect(odbc(), filedsn = "amlr-pinniped-db-prod.dsn")
   x <- tbl_vCensus_AFS_Capewide_Pup(con)
 
@@ -94,7 +109,11 @@ do not have variance values.
   cwp_review(x.201617.ballena, loc.agg = TRUE)
 
   cwp_total(x)
+  # All included locations are aggregated by observer,
+  # before summarizing across single agregated location
   cwp_total(x.201617.ballena, loc.agg = TRUE)
+  # Each location is summarized, before combining
+  cwp_total(x.201617.ballena, loc.agg = FALSE)
 
   x.byloc <- cwp_total_by_loc(x)
   cwp_total(x.byloc, x.byloc = TRUE)

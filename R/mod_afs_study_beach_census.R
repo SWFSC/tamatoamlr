@@ -6,8 +6,8 @@ mod_afs_study_beach_census_ui <- function(id) {
   # assemble UI elements
   tagList(
     fluidRow(
-      box(
-        title = "Filters", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Filters", width = 6,
         fluidRow(
           column(12, mod_filter_season_ui(ns("filter_season")))
         ),
@@ -15,23 +15,20 @@ mod_afs_study_beach_census_ui <- function(id) {
         uiOutput(ns("age_sex_uiOut_selectize")),
         uiOutput(ns("location_uiOut_selectize"))
       ),
-      box(
-        title = "Summary options", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Summary options", width = 6,
         helpText("This tab allows you to summarize and visualize AFS Study Beach census data. ",
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(
-            width = 4,
-            .summaryTimingUI(ns, c("fs_mult_date", "fs_single")),
-            # .summaryTimingUI(ns, c("fs_single")),
-          ),
-          column(4, .summaryLocationUI(ns, c("by_amlr", "by_capewide", "by_beach"), "by_amlr", FALSE)),
-          column(4, .summarySpAgeSexUI(ns, c("by_sp_age_sex"), "by_sp_age_sex"))
+          column(6, .summaryTimingUI(ns, c("fs_mult_date", "fs_single"))),
+          column(6, .summaryLocationUI(ns, c("by_amlr", "by_capewide", "by_beach"), "by_amlr", FALSE)),
+          # column(4, .summarySpAgeSexUI(ns, c("by_sp_age_sex"), "by_sp_age_sex"))
         ),
         checkboxInput(ns("pup_dead_cumsum"), "Cumulative sum of dead pups", value = TRUE),
+        helpText("These data will always be summarized by species, sex, and age class."),
         helpText("Note that locations (i.e., the 'location' column in the",
-                 "table output) are always grouped")
+                 "table output) are always grouped.")
       )
     ),
     mod_output_ui(
@@ -120,7 +117,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
         selectInput(
           session$ns("age_sex"), tags$h5("Columns to plot"),
           choices = c("pup_total_count", tamatoamlr::afs.study.beach.counts),
-          selected = c("pup_live_count", "pup_dead_count"),
+          selected = c("pup_total_count", "pup_live_count", "pup_dead_count"),
           multiple = TRUE, selectize = TRUE
         )
       })
@@ -192,7 +189,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
                    between(census_date,
                            !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
         } else {
-          validate("invalid input$summary_timing value")
+          .validate_else("summary_timing")
         }
 
         #----------------------------------------------
@@ -221,18 +218,13 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
           validate(need(input$location, "Please select at least one beach name"))
           census.df <- census.df %>% filter(location_group %in% input$location)
         } else if (input$summary_location == "by_amlr") {
-          # TODO: AMLR study beach start dates, etc
-          amlr.beaches <- c(
-            "Chungungo", "Cachorros", "Maderas", "Copi", "Hue",
-            "Copihue", "Modulo",  "Daniel", "Marko"
-          )
           # tbl(pool(), "beaches") %>%
           #   collect() %>%
           #   filter(!is.na(study_beach_season_start_id)) %>%
           #   select(name) %>%
           #   arrange(name) %>%
           #   unlist() %>% unname()
-          census.df <- census.df %>% filter(location_group %in% amlr.beaches)
+          census.df <- census.df %>% filter(location_group %in% .amlr.beaches)
         }
 
         validate(
@@ -306,7 +298,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
           x.val <- as.name("season_name")
           x.lab <- "Season"
         } else {
-          validate("census plot - invalid input$summary_timing value")
+          .validate_else("summary_timing")
         }
 
         y.lab <- "Count"

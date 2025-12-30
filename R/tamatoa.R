@@ -39,12 +39,12 @@ tamatoa <- function(..., filedsn = NULL) {
     dashboardSidebar(
       sidebarMenu(
         id = "tabs",
-        menuItem("Database and Season Info", tabName = .id.list$info, icon = i1),
+        menuItem("Database and Season Info", tabName = .id.list$info, icon = i1,
+                 selected = TRUE), #must start here to 'run' the database conn
         # menuItem("AFS Diet", tabName = "tab_afs_diet", icon = i1),
         # menuItem("AFS Natality and Pup Mortality", tabName = "tab_afs_pinniped_season", icon = i1),
         menuItem("AFS DCC", tabName = .id.list$dcc, icon = i1),
-        menuItem(
-          "AFS Capewide Pup Census", tabName = .id.list$afs_cwpc, icon = i1),
+        menuItem("AFS Capewide Pup Census", tabName = .id.list$afs_cwpc, icon = i1),
         menuItem("AFS SAM Census", tabName = .id.list$afs_sam, icon = i1),
         menuItem("AFS Study Beach Census", tabName = .id.list$afs_sbc, icon = i1),
         # menuItem("Pinnipeds + Tags", tabName = "tab_pt", icon = i1),

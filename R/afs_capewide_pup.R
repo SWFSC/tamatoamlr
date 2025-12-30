@@ -1,55 +1,71 @@
-#' Summarize AFS Capewide Pup Census Data
+#' Summarize AFS CWP Census Data
 #'
-#' Summarize AFS Capewide Pup (CWP) Census Data
+#' Summarize AFS Cape-wide Pup (CWP) Census Data
 #'
 #' @param x data frame; output of [tbl_vCensus_AFS_Capewide_Pup()] or
 #'   equivalent. The exception is if `x.byloc == TRUE`; in this case then `x`
 #'   must be the output of `cwp_total_by_loc()`
-#' @param loc.agg logical; indicates if `cwp_review()` should aggregate records
-#'   across location (by observer) before summarizing (`TRUE`), or if records
-#'   should be summarized by season/location as-is (`FALSE`; default).
+#' @param loc.agg logical; if `TRUE`, then records will be aggregated by season
+#'   and observer across all locations in `x` before doing further summarizing.
+#'   This option is intended for situations where e.g. puppies moved between
+#'   beaches between observer counts, and the user wants to aggregate counts
+#'   before reviewing to see if recounts are needed
 #' @param x.byloc logical; indicates if `x` is the output of
-#'   `cwp_total_by_loc()`. This argument is intended to minimize work if a user
+#'   `cwp_total_by_loc()`. This argument is intended for times where the user
 #'   needs both the output of `cwp_total_by_loc()` and `cwp_total()`
+#'   Specifically, it allows the user to pass the output of `cwp_total_by_loc()`
+#'   directly to `cwp_total()` as `x`, rather than `cwp_total()` needing to run
+#'   `cwp_total_by_loc()` again. is intended to minimize work if a user needs
+#'   both the output of `cwp_total_by_loc()` and `cwp_total()`
+#' @param verbose logical; should a message be printed stating how many records
+#'   with `exclude_count == TRUE` were removed from `x` before processing?
 #'
 #' @details Function-specific details:
-#'  * `cwp_loc_agg()`: Aggregate pup counts and related info across
-#'   locations, and by season/observer. This function is intended for situations
-#'   where a user has filtered CWP data for a specific subset of locations and
-#'   wants to summarize the counts across all of these locations, effectively
-#'   treating all of the locations as one location.
+#'
+#'   * `cwp_loc_agg()`: Aggregate pup counts and related info across
+#' locations, grouping by season and observer. This function is intended for
+#' situations where a user has filtered CWP data for a specific subset of
+#' locations and wants to work with the counts across all of these locations,
+#' effectively treating all of the selected locations as one location.
 #'
 #'   * `cwp_review()`: Summarize pup counts and ancillary information for review
-#'   after grouping by season_name and location. `loc.agg == TRUE` then all
-#'   counts will be summed by observer across locations, i.e., `x` will be
-#'   passed to `cwp_loc_agg()`, before being summarized. The output data frame
-#'   is various pasted conglomerations that are intended for review to help
-#'   determine if recounts need to happen.
+#' after grouping by season_name and location. If `loc.agg == TRUE` then all
+#' counts will be summed by observer across locations. Specifically, `x` will be
+#' passed to `cwp_loc_agg()`, before being summarized. The output data frame is
+#' various pasted conglomerations that are intended for within-season review to
+#' help determine if recounts are needed.
 #'
-#'   * `cwp_total_by_loc()`: group by season_name and location; return count mean,
-#'   variance, SD, and min date. Calculating the variance and SD follow Cape
-#'   Shirref/AMLR-specific rules about when it must be NA based on historical
-#'   knowledge about past survey data. See the 'assumptions' section for
-#'   details. census_date_min is the earliest census date for that
-#'   season/location group. Records with
+#'   * `cwp_total_by_loc()`: group by season_name and location, and return count mean,
+#' variance, SD, and min census date (across locations). Calculating the
+#' variance and SD follow Cape Shirreff/AMLR-specific rules about when it must
+#' be `NA`. These rules are based on historical knowledge about past survey
+#' data. See the 'assumptions' section below for further details. The min census
+#' date is the earliest census date for that season/location group.
 #'
-#'   * `cwp_total()`: after running cwp_total_by_loc, group by season name and
-#'   return counts and standard deviations
+#'   * `cwp_exclude_count()` removes any records with an 'exclude_count' flag,
+#' i.e., with `exclude_count == TRUE` for that record. If `verbose` is `TRUE`
+#' (default), then a message will be printed via [base::message()].
 #'
-#'   Note that none of these functions do any rounding. To round values, for
-#'   instance to get a whole number for pup counts, users may use functions such
-#'   as [base::round()] or [amlrian::round_logical()]
+#'   * `cwp_total()`: after running `cwp_total_by_loc()`, group by season name and
+#' return counts and standard deviations.
 #'
-#'   The cwp functions make several assumptions specific to U.S. AMLR Pinniped
-#'   Data:
+#' Note that none of these functions do any rounding. To round values, for
+#' instance to get a whole number for pup counts, use functions such as
+#' [base::round()] or [amlrian::round_logical()]
+#'
+#' Also note that the functions `cwp_loc_agg()` and `cwp_total_by_loc()`
+#' always remove any records with an 'exclude_count' flag before processing.
+#'
+#' Assumptions: The 'cwp' functions make several assumptions specific to U.S. AMLR Pinniped
+#' Data:
 #'   * The research program values are unique when considered by season
 #'   * Study beaches (locations: Copihue, Maderas, Cachorros, Chungungo)
-#'   censused between 2008-07-01 and 2011-07-01 are single counts and thus do
-#'   not have variance values.
+#' censused between 1 July 2008 and 1 July 2011 were recorded as single counts,
+#' and thus do not have variance values.
 #'   * All counts before July 2008 (i.e., before the 2008/09 season)
-#'   do not have variance values.
+#' do not have valid variance values.
 #'
-#' @return An ungrouped object of the same tpye as `x`, with the summarized AFS
+#' @return An ungrouped object of the same type as `x`, with the summarized AFS
 #'   Capewide Pup Census data. The summary options are described in 'Details'.
 #'
 #'   For all functions except `cwp_total()`: if 'census_afs_capewide_pup_sort'
@@ -58,7 +74,7 @@
 #'   'season_name').
 #'
 #' @examplesIf FALSE
-#'   # Not run; examples only will run if `con` is a valid database connection
+#'   # Not run; examples only will run if 'con' is a valid database connection
 #'   con <- odbc::dbConnect(odbc(), filedsn = "amlr-pinniped-db-prod.dsn")
 #'   x <- tbl_vCensus_AFS_Capewide_Pup(con)
 #'
@@ -70,14 +86,18 @@
 #'   cwp_review(x.201617.ballena, loc.agg = TRUE)
 #'
 #'   cwp_total(x)
+#'   # All included locations are aggregated by observer,
+#'   # before summarizing across single agregated location
 #'   cwp_total(x.201617.ballena, loc.agg = TRUE)
+#'   # Each location is summarized, before combining
+#'   cwp_total(x.201617.ballena, loc.agg = FALSE)
 #'
 #'   x.byloc <- cwp_total_by_loc(x)
 #'   cwp_total(x.byloc, x.byloc = TRUE)
 #'
 #' @name afs_capewide_pup
 #' @export
-cwp_loc_agg <- function(x) {
+cwp_loc_agg <- function(x, verbose = TRUE) {
   columns.names <- c(
     "season_name", "location", "census_date",
     "observer", "census_notes", "exclude_count",
@@ -89,7 +109,9 @@ cwp_loc_agg <- function(x) {
 
   sort.syms <- syms(intersect(c("census_afs_capewide_pup_sort"), names(x)))
 
-  x <- cwp_exclude_count(x)
+  x <- cwp_exclude_count(x, verbose)
+
+  locations.all <- paste(sort(unique(x$location)), collapse = ", ")
 
   x.out <- x %>%
     arrange(!!!sort.syms) %>%
@@ -97,7 +119,7 @@ cwp_loc_agg <- function(x) {
     summarise(across(c(pup_count, pup_live_count, pup_dead_count),
                      \(x) sum(x, na.rm = TRUE),
                      .names = "{.col}"),
-              location = paste(unique(location), collapse = ", "),
+              location = locations.all, #needed to properly group later
               census_date_min = min(census_date),
               exclude_count = unique(exclude_count),
               census_notes = if_else(
@@ -154,7 +176,7 @@ cwp_review <- function(x, loc.agg = FALSE) {
 
 #' @name afs_capewide_pup
 #' @export
-cwp_total_by_loc <- function(x, loc.agg = FALSE) {
+cwp_total_by_loc <- function(x, loc.agg = FALSE, verbose = TRUE) {
   columns.names <- c(
     "season_name", "location",
     "census_date", "pup_count", "research_program", "exclude_count"
@@ -163,7 +185,7 @@ cwp_total_by_loc <- function(x, loc.agg = FALSE) {
 
   sort.syms <- syms(intersect(c("census_afs_capewide_pup_sort"), names(x)))
 
-  x <- cwp_exclude_count(x)
+  x <- cwp_exclude_count(x, verbose)
 
   # Aggregate across locations, if specified
   if (loc.agg) x <- cwp_loc_agg(x) %>% rename(census_date = census_date_min)
@@ -191,7 +213,7 @@ cwp_total_by_loc <- function(x, loc.agg = FALSE) {
 
 #' @name afs_capewide_pup
 #' @export
-cwp_total <- function(x, x.byloc = FALSE, loc.agg = FALSE) {
+cwp_total <- function(x, x.byloc = FALSE, loc.agg = FALSE, verbose = TRUE) {
   x.df.byloc <- if (x.byloc) {
     loc.columns.names <- c(
       "season_name", "location",
@@ -202,14 +224,15 @@ cwp_total <- function(x, x.byloc = FALSE, loc.agg = FALSE) {
 
     x
   } else {
-    cwp_total_by_loc(x, loc.agg = loc.agg)
+    cwp_total_by_loc(x, loc.agg = loc.agg, verbose)
   }
 
   x.df.byloc %>%
     group_by(season_name) %>%
     summarise(count_mean = sum(count_loc_mean),
               count_var = if_else(min(census_date_min) < as.Date("2011-07-01"),
-                                  NA_real_, sum(count_loc_var, na.rm = TRUE)),
+                                  NA_real_,
+                                  sum(count_loc_var, na.rm = TRUE)),
               count_sd = sqrt(count_var),
               research_program = unique(research_program),
               .groups = "drop") %>%
@@ -219,14 +242,14 @@ cwp_total <- function(x, x.byloc = FALSE, loc.agg = FALSE) {
 
 
 # Verbosely remove any records with an exclude_count flag
-cwp_exclude_count <- function(x) {
+cwp_exclude_count <- function(x, verbose) {
   if (any(x$exclude_count)) {
-    warning("x contains ", sum(x$exclude_count),
-            " record(s) with exclude_count == TRUE; ",
-            "note that these records will be filtered out ",
-            "for the specified processing",
-            immediate. = TRUE)
-
+    if (verbose) {
+      message(glue("x contains {sum(x$exclude_count)} record(s) with ",
+                   "'exclude_count == TRUE'; ",
+                   "note that these records will be removed ",
+                   "for the specified processing"))
+    }
     x %>% filter(exclude_count == 0)
 
   } else {
