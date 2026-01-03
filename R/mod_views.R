@@ -22,8 +22,8 @@ mod_views_ui <- function(id) {
             width = 6,
             selectInput(ns("view"), tags$h5("View to display"),
                         # choices = c("Sample inventory" = "sample_inventory",
-                        choices = c("Attendance pup weights" = "apw"),
-                        selected = "sample_inventory")
+                        choices = c("Attendance pup weights" = "apw",
+                                    "Diets" = "diets"))
           )
           # column(
           #   width = 6,
@@ -136,7 +136,6 @@ mod_views_server <- function(id, src, season.df, tab) {
 
       #-------------------------------------------------------------------------
       # Attendance pup weights
-
       apw_collect <- reactive({
         apw <- try(
           tbl(src(), "vAttendance_Pup_Weights") %>% collect(),
@@ -149,20 +148,39 @@ mod_views_server <- function(id, src, season.df, tab) {
         apw
       })
 
-
       apw <- reactive({
         apw_collect() %>% filter(season_name == req(input$season))
       })
 
+
+      #-------------------------------------------------------------------------
+      # Diets
+      diets_collect <- reactive({
+        diets <- try(
+          tbl_vDiets(src()) %>% collect(),
+          silent = TRUE
+        )
+        validate(
+          need(diets,
+               "Unable to find and load vDiets from specified database")
+        )
+        diets
+      })
+
+
+      diets <- reactive({
+        diets_collect() %>% filter(season_name == req(input$season))
+      })
+
+
       #-------------------------------------------------------------------------
       tbl_output <- reactive({
-        # tbl.df <- if (input$view == "sample_inventory") {
-        #   sample_inventory()
-        # } else
-        if (input$view == "apw") {
+        tbl.df <- if (input$view == "diets") {
+          diets()
+        } else if (input$view == "apw") {
           apw()
         } else {
-          validate("invalid view - please contact the database manager")
+          .validate_else("view")
         }
       })
 

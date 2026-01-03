@@ -194,3 +194,16 @@ tbl_vTakes <- function(src) {
            individual_id, individual_id_source,
            record_id, season_info_id, beach_id, created_dt)
 }
+
+
+#' @name extract
+#' @export
+tbl_vDiets <- function(src) {
+  tbl(src, "vDiets") %>%
+    select(season_name, diet_scat_date,
+           sample_type, sample_num, species, sex, location,
+           collection_date, collector, process_date, processor,
+           krill_type, fish_type, squid_type, carapace_save,
+           tag_id, tag, tag_type, pinniped_id, notes,
+           diets_id, season_info_id, beach_id, created_dt)
+}

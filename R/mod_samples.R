@@ -42,6 +42,11 @@ mod_samples_ui <- function(id) {
                                        "DNA - RNALater" = "dna_rnalater"))
             )
           )
+        ),
+        conditionalPanel(
+          condition = "input.summary == 'inventory'", ns = ns,
+          checkboxInput(ns("scats"), "Include scats in the sample inventory",
+                        value = FALSE)
         )
       )
     ),
@@ -115,6 +120,50 @@ mod_samples_server <- function(id, src, season.df, tab) {
 
 
       #-------------------------------------------------------------------------
+      # Scats
+      diets_collect <- reactive({
+        diets <- try(
+          tbl_vDiets(src()) %>% collect(),
+          silent = TRUE
+        )
+        validate(
+          need(diets,
+               "Unable to find and load vDiets from specified database")
+        )
+        diets
+      })
+
+
+      diets_inventory <- reactive({
+        x <- diets_collect() %>%
+          filter(season_name == req(input$season)) %>%
+          mutate(sample_source = "Diets",
+                 sample_type_group = "Diets",
+                 sample_type = str_to_sentence(sample_type),
+                 quantity = 1,
+                 units = "count")
+
+        if (req(input$inventory_summ) == "all") {
+          x %>%
+            select(diets_id, sample_num, sample_source, season_name,
+                   sample_date = collection_date,
+                   species, sample_type, sample_type_group)
+        } else {
+          x.grouped <- if (input$inventory_summ == "sample_type") {
+            x %>% group_by(species, sample_type, sample_type_group)
+          } else if (input$inventory_summ == "sample_type_group") {
+            x %>% group_by(species, sample_type_group)
+          } else {
+            .validate_else("inventory_summ")
+          }
+
+          x.grouped %>%
+            summarise(n_packages = n())
+        }
+      })
+
+
+      #-------------------------------------------------------------------------
       # Sample inventory
 
       sample_inventory <- reactive({
@@ -123,13 +172,13 @@ mod_samples_server <- function(id, src, season.df, tab) {
 
         if (req(input$inventory_summ) == "all") {
           x
-
         } else {
           x <- x %>%
             # Make single column with 'most unique' ID
             # case_when rolls through order of priority
-            mutate(on_the_fly_unique = if_else(!is.na(unk_group_id),
-                                               unk_group_id, on_the_fly_id),
+            mutate(unk_group_id = unk_group_id,
+                   on_the_fly_unique = if_else(
+                     !is.na(unk_group_id), unk_group_id, on_the_fly_id),
                    id_unique = case_when(
                      !is.na(pinniped_id) ~ pinniped_id,
                      !is.na(pup_afs_id) ~ pup_afs_id,
@@ -142,7 +191,7 @@ mod_samples_server <- function(id, src, season.df, tab) {
           } else if (input$inventory_summ == "sample_type_group") {
             x %>% group_by(species, sample_type_group)
           } else {
-            validate("invalid inventory_summ - please contact the database manager")
+            .validate_else("inventory_summ")
           }
 
           x.grouped %>%
@@ -173,11 +222,15 @@ mod_samples_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       tbl_output <- reactive({
         tbl.df <- if (input$summary == "inventory") {
-          sample_inventory()
+          if (input$scats) {
+            bind_rows(sample_inventory(), diets_inventory())
+          } else {
+            sample_inventory()
+          }
         } else if (input$summary == "type") {
           sample_type()
         } else {
-          validate("invalid samples - please contact the database manager")
+          .validate_else("summary")
         }
       })
 
