@@ -47,7 +47,7 @@ mod_dcc_pinniped_ui <- function(id) {
             helpText("The below data are all processed DCC data for the",
                      "selected Tag|Freq|Code(s)"),
             checkboxInput(ns("ping_plot_trip"),
-                          "Include the time gap(s) of the trip(s) in the plot",
+                          "Include the trip time gaps in the plot",
                           value = FALSE)
           ),
           conditionalPanel(
@@ -57,11 +57,10 @@ mod_dcc_pinniped_ui <- function(id) {
                 width = 6,
                 selectInput(ns("trips_summary_type"),
                             tags$h5("Trips summary type"),
-                            choices = c("All trips for each seal" = "each",
+                            choices = c("All trips for each seal" = "by_each",
                                         "For each seal, average across trips" = "by_pinniped",
                                         "For each trip number, average across seals" = "by_trip",
-                                        "Average across all seals and trips" = "all"),
-                            selected = "each")
+                                        "Average across all seals and trips" = "by_all"))
               ),
               column(
                 width = 5, offset = 1,
@@ -84,7 +83,13 @@ mod_dcc_pinniped_ui <- function(id) {
         actionButton(ns("tag_freq_code_pupped"), "Select all seals with pups"),
         actionButton(ns("tag_freq_code_clear"), "Clear all selections")
       ),
-      mod_output_ui(ns("out"), tags$br(), uiOutput(ns("warning_na_records")))
+      mod_output_ui(
+        ns("out"),
+        tags$br(),
+        uiOutput(ns("warning_na_records")),
+        tags$strong("Summary text for sit rep:"),
+        textOutput(ns("trip_txt"))
+      )
     )
   )
 }
@@ -378,26 +383,44 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
         # capture_location)
       })
 
-      ### Mean trip lengths
-      trips_means <- reactive({
-        dcc.trips <- trips() %>%
-          filter(trip_num <= input$trip_num_max)
+      ### Function to summarise trip means
+      # TODO: move to internal functions, or amlrian DCC block (also todo..)
+      .summarise_trips_means <- function(.data, ...) {
+        .data %>%
+          group_by(...) %>%
+          summarise(n_trips = n(),
+                    trip_length_hr_mean = round(mean(trip_length_hr), 2),
+                    trip_length_day_mean = round(trip_length_hr_mean/24, 2),
+                    .groups = "drop")
+      }
 
-        summarise_trips_means <- function(.data, ...) {
-          .data %>%
-            group_by(...) %>%
-            summarise(n_trips = n(),
-                      trip_length_hr_mean = round(mean(trip_length_hr), 2),
-                      trip_length_day_mean = round(trip_length_hr_mean/24, 2),
-                      .groups = "drop")
-        }
+      ### Mean trip lengths
+      trip_mean_by_pinniped <- reactive({
+        trips() %>%
+          filter(trip_num <= input$trip_num_max) %>%
+          .summarise_trips_means(tag, freq, code)
+      })
+      trip_mean_by_trip <- reactive({
+        trips() %>%
+          filter(trip_num <= input$trip_num_max) %>%
+          .summarise_trips_means(trip_num)
+      })
+      trip_mean_by_all <- reactive({
+        trips() %>%
+          filter(trip_num <= input$trip_num_max) %>%
+          .summarise_trips_means()
+      })
+
+      trips_means <- reactive({
+        # dcc.trips <- trips() %>%
+        #   filter(trip_num <= input$trip_num_max)
 
         if (input$trips_summary_type == "by_pinniped") {
-          dcc.trips %>% summarise_trips_means(tag, freq, code)
+          trip_mean_by_pinniped()
         } else if (input$trips_summary_type == "by_trip") {
-          dcc.trips %>% summarise_trips_means(trip_num)
-        } else if (input$trips_summary_type == "all") {
-          dcc.trips %>% summarise_trips_means()
+          trip_mean_by_trip()
+        } else if (input$trips_summary_type == "by_all") {
+          trip_mean_by_all()
         } else {
           .validate_else("trip_lengths_summary_type")
         }
@@ -448,7 +471,7 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
 
       ### Plot for trip length summary type
       trips_mean_plot <- reactive({
-        req(input$trips_summary_type != "each")
+        req(input$trips_summary_type != "by_each")
 
         # Helper plot function
         trips_mean_plot_help <- function(df, x, y, fill, xlab) {
@@ -483,7 +506,7 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
             trips_means(), trip_num, trip_length_hr_mean, n_trips,
             "Trip number"
           )
-        } else if (input$trips_summary_type == "all") {
+        } else if (input$trips_summary_type == "by_all") {
           validate("No plot for all trips trip length summary")
         } else {
           .validate_else("trip_lengths_summary_type")
@@ -522,10 +545,50 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
       # Outputs
 
       #-------------------------------------------------------------------------
+      ### Sit rep text
+      output$trip_txt <- renderText({
+        req(input$trips_summary_type == "by_all")
+
+        t.mean.all <- trip_mean_by_all()
+        t.mean.trips <- trip_mean_by_trip()
+
+        dcc_text_format <- function(df) {
+          h <- df$trip_length_hr_mean
+          n <- df$n_trips
+          d <- df$trip_length_day_mean
+          glue("{round_logical(h, 1)} hours (n={n}, {round_logical(d, 1)} days)")
+        }
+
+        trips.list <- lapply(t.mean.trips$trip_num,  function(i, df) {
+          df.curr <- df %>% filter(trip_num == i)
+          trip.num.txt <- case_when(
+            i == 1 ~ "first",
+            i == 2 ~ "second",
+            i == 3 ~ "third",
+            i == 4 ~ "fourth",
+            i == 5 ~ "fifth",
+            i == 6 ~ "sixth",
+          )
+          trip.txt <- dcc_text_format(df.curr)
+
+          glue("{trip.txt} for the {trip.num.txt} trip")
+        }, df = t.mean.trips)
+
+        glue(
+          "As of ####, the average trip length across all completed trips is ",
+          dcc_text_format(t.mean.all), ". ",
+          "All seals in the study have now completed their #### trips. ",
+          "The {updated} average trip lengths are ",
+          paste(trips.list, collapse = ", "), "."
+        )
+      })
+
+
+      #-------------------------------------------------------------------------
       ### Table
       tbl_output <- reactive({
         if (input$summary_type == "trips") {
-          if (input$trips_summary_type == "each") {
+          if (input$trips_summary_type == "by_each") {
             if (input$trips_max) trips_max() else trips()
           } else {
             trips_means()
@@ -544,10 +607,10 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
 
 
       #-------------------------------------------------------------------------
-      # Output plot
+      ### Output plot
       plot_output <- reactive({
         if (input$summary_type == "trips") {
-          if (input$trips_summary_type == "each") {
+          if (input$trips_summary_type == "by_each") {
             trips_plot()
           } else {
             trips_mean_plot()

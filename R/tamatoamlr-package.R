@@ -120,7 +120,11 @@ utils::globalVariables(c(
   "deployment_season", "pinniped_sex", "arrival_date", 'twins', "status", "age",
   "on_the_fly_id", "sample_type", "sample_type_group", "age_class",
   "n_individual_animals", "n_adults_juveniles", "n_pups", "ad_male_sum",
-  "tag_resights_leopards_id", "id_unique", "n_packages",
+  "tag_resights_leopards_id", "id_unique",
+
+  "n_packages", "carapace_save", "collection_date", "collector", "diets_id",
+  "fish_type", "krill_type", "squid_type",
+  "process_date", "processor", "sample_num", "sample_source", "tag_id",
 
   # vTakes
   "take_date", "individual_id", "individual_identifier", "individual_id_source",
