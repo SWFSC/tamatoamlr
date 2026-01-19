@@ -229,8 +229,8 @@ mod_pinniped_season_server <- function(id, src, season.df, tab) {
         validate(need(input$summary_type, "Please select a summary type"))
         switch(input$summary_type,
                fate = pup_fate(),
-               raw = ps_df(),
-               validate("invalid input$summary_type value"))
+               raw = ps_df() %>% tag_sort(tag_primary, desc(season_name)),
+               .validate_else("summary_type"))
       })
 
       plot_output <- reactive({
