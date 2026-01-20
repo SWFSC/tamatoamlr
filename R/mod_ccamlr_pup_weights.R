@@ -8,11 +8,10 @@ mod_ccamlr_pup_weights_ui <- function(id) {
     fluidRow(
       box(
         title = "Filters", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
-        column(9, mod_filter_season_ui(ns("filter_season"))),
-        column(
-          width = 3,
-          uiOutput(ns("round_num_uiOut")),
-          uiOutput(ns("sex_uiOut"))
+        mod_filter_season_ui(ns("filter_season")),
+        fluidRow(
+          column(6, uiOutput(ns("round_num_uiOut"))),
+          column(6, uiOutput(ns("sex_uiOut")))
         )
       ),
       box(
@@ -21,20 +20,24 @@ mod_ccamlr_pup_weights_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(4, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_raw"))), #"fs_facet",
+          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_raw"))), #"fs_facet",
           conditionalPanel(
             condition = "input.summary_timing != 'fs_raw'", ns = ns,
-            column(4, radioButtons(ns("summary_type"), tags$h5("Summarize by:"),
+            column(6, radioButtons(ns("summary_type"), tags$h5("Summarize by:"),
                                    choices = c("Mean weight" = "weight",
                                                "Growth rate" = "metric"),
                                    selected = "weight")),
-            column(
-              width = 4,
-              tags$br(), tags$br(),
-              checkboxInput(ns("sex_grp"), "Separate weights by sex",
-                            value = TRUE)
-            )
+            # column(
+            #   width = 4,
+            #   tags$br(), tags$br(),
+            #   checkboxInput(ns("sex_grp"), "Separate weights by sex",
+            #                 value = TRUE)
+            # )
           )
+        ),
+        conditionalPanel(
+          condition = "input.summary_timing != 'fs_raw'", ns = ns,
+          checkboxInput(ns("sex_grp"), "Separate weights by sex", value = TRUE)
         )
       )
     ),
@@ -77,7 +80,7 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
 
       ### Round number
       output$round_num_uiOut<- renderUI({
-        selectInput(session$ns("round_num"), tags$h5("Pup Weight Round"),
+        selectInput(session$ns("round_num"), tags$h5("Pup weight rounds"),
                     choices = sort(unique(req(cpw_df_collect())$round_num)),
                     selected = c(1:4), multiple = TRUE)
       })

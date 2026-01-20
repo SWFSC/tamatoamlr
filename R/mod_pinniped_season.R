@@ -33,16 +33,16 @@ mod_pinniped_season_ui <- function(id) {
         helpText("This tab allows you to generate summaries of pinniped season",
                  "data"),
         fluidRow(
-          column(5, .summaryTimingUI(ns, c("fs_mult_total", "fs_single"))),
-          column(3, radioButtons(ns("summary_type"), tags$h5("Summary type"),
-                                 choices = c("Average age" = "age",
-                                             "Natality rates" = "natality",
-                                             "Pup fate" = "fate",
-                                             "Return rates" = "return",
+          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single"))),
+          column(6, radioButtons(ns("summary_type"), tags$h5("Summary type"),
+                                 choices = c("Pup fate" = "fate",
+                                             # "Average age" = "age",
+                                             # "Natality rates" = "natality",
+                                             # "Return rates" = "return",
                                              "Raw data" = "raw"),
-                                 selected = "fate")),
-          column(4, uiOutput(ns("pup_fate_choices_uiOut_selectize")))
-        )
+                                 selected = "fate"))
+        ),
+        uiOutput(ns("pup_fate_choices_uiOut_selectize"))
       )
     ),
     mod_output_ui(ns("out"))

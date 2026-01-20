@@ -34,8 +34,8 @@ mod_phocid_census_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(4, .summaryTimingUI(ns, c("fs_mult_total", "fs_mult_date", "fs_single"))),
-          column(4, .summaryLocationUI(ns, c("by_capewide", "by_beach"), "by_capewide")),
+          column(5, .summaryTimingUI(ns, c("fs_mult_total", "fs_mult_date", "fs_single"))),
+          column(3, .summaryLocationUI(ns, c("by_capewide", "by_beach"), "by_capewide")),
           column(4, .summarySpAgeSexUI(ns, c("by_sp", "by_sp_age_sex"), "by_sp"))
         ),
         conditionalPanel(
@@ -208,13 +208,15 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
         #----------------------------------------------
         # Filter by season/date/week num
         fs <- filter_season()
+        season.curr <- req(fs$season())
 
         census.df <- if (input$summary_timing %in% .summary.timing.multiple) {
           census.df.orig %>%
-            filter(season_name %in% !!req(fs$season()))
+            filter(season_name %in% season.curr)
         } else if (input$summary_timing %in% .summary.timing.single) {
+          req(length(season.curr) == 1)
           census.df.orig %>%
-            filter(season_name == !!req(fs$season()),
+            filter(season_name == season.curr,
                    between(!!sym(census.date),
                            !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
         } else {
@@ -321,7 +323,7 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
 
 
       #------------------------------------------------------------------------
-      ### Process data, part 2: make data long / calculate other values if necessary
+      ### Process data, part 2: make data long, and calculate other values if necessary
       census_df <- reactive({
         # Get the names of the applicable census columns, and then summarize
         grp.names.all <- c("season_name", census.date, "species", loc_column())

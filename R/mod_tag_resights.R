@@ -10,17 +10,19 @@ mod_tag_resights_ui <- function(id) {
         title = "Filters", status = "warning", solidHeader = FALSE,
         width = 6, collapsible = TRUE,
         mod_filter_season_ui(ns("filter_season")),
-        fluidRow(
-          column(6, selectInput(ns("species"), tags$h5("Species"), #inline = TRUE,
-                                choices = tamatoamlr::pinniped.sp.study,
-                                selected = tamatoamlr::pinniped.sp.study,
-                                multiple = TRUE, selectize = TRUE)),
-          column(
-            width = 6,
-            tags$br(), tags$br(),
-            checkboxInput(ns("ka"), "Include only resights of known-age pinnipeds")
-          )
-        )
+        # fluidRow(
+        #   column(6,
+        selectInput(ns("species"), tags$h5("Species"), #inline = TRUE,
+                    choices = tamatoamlr::pinniped.sp.study,
+                    selected = tamatoamlr::pinniped.sp.study,
+                    multiple = TRUE, selectize = TRUE)
+        # ),
+        # column(
+        #   width = 6,
+        #   tags$br(), tags$br(),
+        #   checkboxInput(ns("ka"), "Include only resights of known-age pinnipeds")
+        # )
+        # )
         # checkboxInput(ns("all_pinnipeds"),
         #               "Summarize all pinnipeds. Uncheck to select individuals",
         #               value = TRUE),
@@ -36,15 +38,15 @@ mod_tag_resights_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(4, .summaryTimingUI(ns, c("fs_total", "fs_single"),
-                                     "fs_single")),
-          column(4,  radioButtons(ns("summary_type"), tags$h5("Summarize by"),
+          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single"))),
+          column(6,  radioButtons(ns("summary_type"), tags$h5("Summarize by"),
                                   choices = c("Pinniped" = "pinniped",
                                               "Resights by season" = "table",
                                               "Species" = "species"),
-                                  selected = "species")),
-          column(4, uiOutput(ns("table_season_uiOut_selectize")))
-        )
+                                  selected = "species"))
+          # column(4, uiOutput(ns("table_season_uiOut_selectize")))
+        ),
+        checkboxInput(ns("ka"), "Include only resights of known-age pinnipeds")
       )
     ),
     mod_output_ui(
@@ -141,23 +143,23 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
         )
       })
 
-      ### Multi-season table summary filter
-      output$table_season_uiOut_selectize <- renderUI({
-        req(input$summary_type == "table")
-        # seasons <- tr_df() %>%
-        #   distinct(season_name) %>%
-        #   arrange(season_name) %>%
-        #   pull(season_name)
-        seasons <- filter_season()$season()
-
-        selectInput(
-          session$ns("table_season"),
-          tags$h5("Only include pinnipeds with at least ",
-                  "one resight in the selected season(s)"),
-          choices = seasons, selected = seasons,
-          multiple = TRUE, selectize = TRUE
-        )
-      })
+      # ### Multi-season table summary filter
+      # output$table_season_uiOut_selectize <- renderUI({
+      #   req(input$summary_type == "table")
+      #   # seasons <- tr_df() %>%
+      #   #   distinct(season_name) %>%
+      #   #   arrange(season_name) %>%
+      #   #   pull(season_name)
+      #   seasons <- filter_season()$season()
+      #
+      #   selectInput(
+      #     session$ns("table_season"),
+      #     tags$h5("Only include pinnipeds with at least ",
+      #             "one resight in the selected season(s)"),
+      #     choices = seasons, selected = seasons,
+      #     multiple = TRUE, selectize = TRUE
+      #   )
+      # })
 
 
       ##########################################################################
@@ -187,8 +189,8 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
         # NOTE: to use bind_rows, it must be using actual data frames.
         #   Cannot use union_all here because of arrange() calls, and
         #   because of different columns in different tables
-        # So, resights have to stay with early collect until leops are
-        #   integrated into the tag_resights table. Ugh.
+        #   So, resights have to stay with early collect until leops are
+        #   integrated into the tag_resights table. Sigh.
         tr.df.collect <- bind_rows(collect(tr.sql.orig), collect(leop.sql.orig))
 
         #----------------------------------------------
@@ -219,6 +221,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       })
 
       #------------------------------------------------------------------------
+      # Bring in pinniped season info, to include as relevant
       ps_df_collect <- reactive({
         req(src(), tab() == .id.list$resights)
         ps.sql <- try(tbl_vPinniped_Season(src()), silent = TRUE)
@@ -243,13 +246,15 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
         #----------------------------------------------
         # Filter by season/date/week num
         fs <- filter_season()
+        season.curr <- req(fs$season())
 
         tr.df <- if (input$summary_timing %in% .summary.timing.multiple) {
           tr.df.orig %>%
-            filter(season_name %in% !!req(fs$season()))
+            filter(season_name %in% season.curr)
         } else if (input$summary_timing %in% .summary.timing.single) {
+          req(length(season.curr) == 1)
           tr.df.orig %>%
-            filter(season_name == !!req(fs$season()),
+            filter(season_name == season.curr,
                    between(resight_date,
                            !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
         } else {
@@ -335,7 +340,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
 
         # Generate pinniped_ids with 1+ resights in the selected season(s)
         p.keep <- tr_df() %>%
-          filter(season_name %in% req(input$table_season)) %>%
+          # filter(season_name %in% req(input$table_season)) %>%
           distinct(pinniped_id) %>%
           pull(pinniped_id)
 

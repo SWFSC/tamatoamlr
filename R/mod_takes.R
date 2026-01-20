@@ -28,14 +28,12 @@ mod_takes_ui <- function(id) {
                  "of pinniped takes, for reporting for the",
                  "Marine Mammal Protection Act (MMPA) permit. "),
         fluidRow(
-          column(4, .summaryTimingUI(ns, c("fs_single"))),
-          column(
-            width = 4,
-            radioButtons(ns("summary_type"), tags$h5("Summary type"),
-                         choices = c("By species" = "species",
-                                     "By individual" = "individual",
-                                     "By database table" = "table",
-                                     "All takes" = "all"))
+          column(6, .summaryTimingUI(ns, c("fs_single"))),
+          column(6, radioButtons(ns("summary_type"), tags$h5("Summary type"),
+                                 choices = c("By species" = "species",
+                                             "By individual" = "individual",
+                                             "By database table" = "table",
+                                             "All takes" = "all"))
           )
         )
       )

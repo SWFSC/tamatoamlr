@@ -22,6 +22,7 @@
 
 #-------------------------------------------------------------------------------
 ### Summary function used by census tabs
+# TODO: merge with vcs_summ_func in phocid census tab?
 .vcs_summ_func <- function(y, ..., season.df, beach.chr = FALSE) {
   df.out <-  y %>%
     group_by(...) %>%
