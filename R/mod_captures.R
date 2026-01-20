@@ -10,7 +10,7 @@ mod_captures_ui <- function(id) {
     box(
       title = "Filters", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
       mod_filter_season_ui(ns("filter_season")),
-      checkboxGroupInput(ns("species"), label = tags$h5("Species"), inline = TRUE,
+      checkboxGroupInput(ns("species"), label = .lbl("Species"), inline = TRUE,
                          choices = pinniped.sp.captures, selected = NULL),
       # uiOutput(ns("species_uiOut_checkbox")),
       helpText("TODO: individual captures dropdown")
@@ -28,7 +28,7 @@ mod_captures_ui <- function(id) {
           conditionalPanel(
             ns = ns,
             condition = "input.summary_timing != 'fs_raw'",
-            radioButtons(ns("data_type"), tags$h5("Data type"),
+            radioButtons(ns("data_type"), .lbl("Data type"),
                          choices = c("Body condition" = "body",
                                      "Capture times" = "times",
                                      "Captures by individual" = "individual",
@@ -42,7 +42,7 @@ mod_captures_ui <- function(id) {
           conditionalPanel(
             ns = ns,
             condition = "input.data_type == 'times'",
-            checkboxGroupInput(ns("time_type"), tags$h5("Time type"),
+            checkboxGroupInput(ns("time_type"), .lbl("Time type"),
                                choices = c("Capture to release" = "capture_release",
                                            "Time on gas" = "on_gas",
                                            "Capture to reunion" = "capture_reunion",
@@ -53,7 +53,7 @@ mod_captures_ui <- function(id) {
       ),
       # column(
       #   width = 5,
-      #   radioButtons(ns("summary"), tags$h5("Choose Summary Option"),
+      #   radioButtons(ns("summary"), .lbl("Choose Summary Option"),
       #                choices = c("Summary 1: Captures in one season",
       #                            "Summary 2: Captures in multiple seasons",
       #                            "Summary 3: Captures by Individual",
@@ -63,7 +63,7 @@ mod_captures_ui <- function(id) {
       #   conditionalPanel(
       #     ns = ns,
       #     condition = "input.summary != 'Summary 3: Captures by Individual' && input.summary != 'raw data'",
-      #     radioButtons(ns("data_type"), tags$h5("Choose Data Type Option"),
+      #     radioButtons(ns("data_type"), .lbl("Choose Data Type Option"),
       #                  choices = c("Masses(kg)",
       #                              "Body Conditions (Mass/Length)",
       #                              "Capture to Release Times",
@@ -175,7 +175,7 @@ mod_captures_server <- function(id, src, season.df, tab) {
       #
       #   # TODO: if statement, sometimes display 'AFS only'
       #   checkboxGroupInput(
-      #     session$ns("species"), label = tags$h5("Species"), inline = TRUE,
+      #     session$ns("species"), label = .lbl("Species"), inline = TRUE,
       #     choices = pinniped.sp.captures, selected = NULL
       #   )
       # })

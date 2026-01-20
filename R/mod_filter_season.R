@@ -18,7 +18,7 @@ mod_filter_season_ui <- function(id) {
     ),
     uiOutput(ns("season_uiOut_buttons")),
     fluidRow(
-      # dateInput(ns("mult_date"), tags$h5("Select date"))
+      # dateInput(ns("mult_date"), .lbl("Select date"))
 
       uiOutput(ns("mult_date_uiOut"))
       # column(4, uiOutput(ns("month_uiOut_select"))),
@@ -108,7 +108,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
         column(
           width = column.width,
           selectInput(
-            session$ns("season"), tags$h5("Select season"),
+            session$ns("season"), .lbl("Select season"),
             choices = choices.all, selected = choices.sel,
             multiple = multi, selectize = TRUE
           )
@@ -150,7 +150,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
         column(
           width = 6,
           dateRangeInput(
-            session$ns("date_range"), tags$h5("Date range"),
+            session$ns("date_range"), .lbl("Date range"),
             start = start, end = end, min = min, max = max
           )
         )
@@ -161,15 +161,15 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       ### Mult Date selector
       output$mult_date_uiOut <- renderUI({
         req(summ.level() == "fs_mult_date")
-        # date.lbl <- tags$h5(
+        # date.lbl <- .lbl(
         #   "Select date"
         # )
 
         tagList(
-          column(6, dateInput(session$ns("mult_date"), tags$h5("Select date"))),
+          column(6, dateInput(session$ns("mult_date"), .lbl("Select date"))),
           # column(8, helpText("The year of the date selected does not matter;",
           #                    "only the month and day will be used")),
-          column(6, numericInput(session$ns("mult_max_gap"), tags$h5("Max gap (days)"),
+          column(6, numericInput(session$ns("mult_max_gap"), .lbl("Max gap (days)"),
                                  value = 7, min = 1, step = 1)),
           column(12, helpText("Find the records closest to the selected date",
                               "for all selected seasons.",
@@ -188,7 +188,7 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       #   req(summ.level() == "fs_week", input$season)
       #
       #   selectInput(
-      #     session$ns("week"), tags$h5("Select week (calendar year)"),
+      #     session$ns("week"), .lbl("Select week (calendar year)"),
       #     choices = 1:53, selected = 1, multiple = FALSE,
       #   )
       # })

@@ -15,7 +15,7 @@ mod_takes_ui <- function(id) {
         conditionalPanel(
           condition = "input.pinniped_species == true", ns = ns,
           helpText("Note this filter will remove any 'other species' dead animals"),
-          selectInput(ns("species"), tags$h5("Species"),
+          selectInput(ns("species"), .lbl("Species"),
                       choices = tamatoamlr::pinniped.sp,
                       selected = tamatoamlr::pinniped.sp,
                       multiple = TRUE, selectize = TRUE)
@@ -29,7 +29,7 @@ mod_takes_ui <- function(id) {
                  "Marine Mammal Protection Act (MMPA) permit. "),
         fluidRow(
           column(6, .summaryTimingUI(ns, c("fs_single"))),
-          column(6, radioButtons(ns("summary_type"), tags$h5("Summary type"),
+          column(6, radioButtons(ns("summary_type"), .lbl("Summary type"),
                                  choices = c("By species" = "species",
                                              "By individual" = "individual",
                                              "By database table" = "table",
@@ -57,7 +57,7 @@ mod_takes_server <- function(id, src, season.df, tab) {
 
       ### Season
       output$season <- renderUI({
-        selectInput(session$ns("season"), tags$h5("Season"),
+        selectInput(session$ns("season"), .lbl("Season"),
                     choices = req(season.df())$season_name)
       })
 

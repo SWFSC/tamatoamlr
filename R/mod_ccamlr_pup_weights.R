@@ -23,7 +23,7 @@ mod_ccamlr_pup_weights_ui <- function(id) {
           column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_raw"))), #"fs_facet",
           conditionalPanel(
             condition = "input.summary_timing != 'fs_raw'", ns = ns,
-            column(6, radioButtons(ns("summary_type"), tags$h5("Summarize by:"),
+            column(6, radioButtons(ns("summary_type"), .lbl("Summarize by"),
                                    choices = c("Mean weight" = "weight",
                                                "Growth rate" = "metric"),
                                    selected = "weight")),
@@ -80,7 +80,7 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
 
       ### Round number
       output$round_num_uiOut<- renderUI({
-        selectInput(session$ns("round_num"), tags$h5("Pup weight rounds"),
+        selectInput(session$ns("round_num"), .lbl("Pup weight rounds"),
                     choices = sort(unique(req(cpw_df_collect())$round_num)),
                     selected = c(1:4), multiple = TRUE)
       })
@@ -88,7 +88,7 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       ### Sex
       output$sex_uiOut <- renderUI({
         req(input$sex_grp)
-        checkboxGroupInput(session$ns("sex"), tags$h5("Sex"),
+        checkboxGroupInput(session$ns("sex"), .lbl("Sex"),
                            choices = c("F", "M"), selected = c("F", "M"),
                            inline = TRUE)
       })

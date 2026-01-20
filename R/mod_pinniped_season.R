@@ -12,12 +12,12 @@ mod_pinniped_season_ui <- function(id) {
         mod_filter_season_ui(ns("filter_season")),
         fluidRow(
           column(6, radioButtons(ns("location_scope"),
-                                 tags$h5("Pinniped home location"),
+                                 .lbl("Pinniped home location"),
                                  choices = c("Across all pinnipeds" = "all",
                                              "Study beaches" = "study",
                                              "Non-study beaches" = "non_study"),
                                  selected = "study")),
-          column(6, radioButtons(ns("age"), tags$h5("Ages to include"),
+          column(6, radioButtons(ns("age"), .lbl("Ages to include"),
                                  choices = c("All pinnipeds" = "all",
                                              "Prime age" = "prime"),
                                  selected = "all"))
@@ -34,7 +34,7 @@ mod_pinniped_season_ui <- function(id) {
                  "data"),
         fluidRow(
           column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single"))),
-          column(6, radioButtons(ns("summary_type"), tags$h5("Summary type"),
+          column(6, radioButtons(ns("summary_type"), .lbl("Summary type"),
                                  choices = c("Pup fate" = "fate",
                                              # "Average age" = "age",
                                              # "Natality rates" = "natality",
@@ -76,7 +76,7 @@ mod_pinniped_season_server <- function(id, src, season.df, tab) {
 
         choices <- sort(unique(ps_df()$pup_mortality))
 
-        selectInput(session$ns("pup_fate_choices"), tags$h5("To display"),
+        selectInput(session$ns("pup_fate_choices"), .lbl("To display"),
                     choices = choices, selected = choices,
                     multiple = TRUE, selectize = TRUE)
       })

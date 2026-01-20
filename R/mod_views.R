@@ -20,7 +20,7 @@ mod_views_ui <- function(id) {
         fluidRow(
           column(
             width = 6,
-            selectInput(ns("view"), tags$h5("View to display"),
+            selectInput(ns("view"), .lbl("View to display"),
                         # choices = c("Sample inventory" = "sample_inventory",
                         choices = c("Attendance pup weights" = "apw",
                                     "Diets" = "diets"))
@@ -29,7 +29,7 @@ mod_views_ui <- function(id) {
           #   width = 6,
           #   conditionalPanel(
           #     condition = "input.view == 'sample_inventory'", ns = ns,
-          #     radioButtons(ns("summary_type"), tags$h5("Summarize by"),
+          #     radioButtons(ns("summary_type"), .lbl("Summarize by"),
           #                  choices = c("All samples" = "all",
           #                              "Sample type" = "sample_type",
           #                              "Sample type group" = "sample_type_group"),
@@ -61,7 +61,7 @@ mod_views_server <- function(id, src, season.df, tab) {
 
       ### Season
       output$season <- renderUI({
-        selectInput(session$ns("season"), tags$h5("Season"),
+        selectInput(session$ns("season"), .lbl("Season"),
                     choices = req(season.df())$season_name)
       })
 

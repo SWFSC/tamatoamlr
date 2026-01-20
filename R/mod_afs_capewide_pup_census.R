@@ -81,7 +81,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
         beaches.list <-  sort(unique(census_df_collect()$location))
 
         selectInput(
-          session$ns("location"), tags$h5("Location(s)"),
+          session$ns("location"), .lbl("Location(s)"),
           choices = beaches.list, multiple = TRUE
         )
       })

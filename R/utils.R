@@ -20,6 +20,11 @@
 }
 
 
+# Function to format all widget labels
+# One function makes it much easier to switch styles if needed
+.lbl <- function(i) i #tags$h5(i)
+
+
 #-------------------------------------------------------------------------------
 ### Summary function used by census tabs
 # TODO: merge with vcs_summ_func in phocid census tab?
@@ -59,7 +64,7 @@
   if (!(selected %in% choices.list))
     stop("selected must be one of the choices")
 
-  radioButtons(ns("summary_timing"), label = tags$h5("Summary timing"),
+  radioButtons(ns("summary_timing"), label = .lbl("Summary timing"),
                choices = choices.list, selected = selected)
 }
 
@@ -88,7 +93,7 @@
   if (!(choices.selected %in% choices.list))
     stop("choices.selected must be one of the choices")
 
-  rb.out <- radioButtons(ns("summary_location"), label = tags$h5("Location"),
+  rb.out <- radioButtons(ns("summary_location"), label = .lbl("Location"),
                          choices = choices.list, selected = choices.selected)
 
   if (group.option) {
@@ -127,7 +132,7 @@
   if (!(choices.selected %in% choices.list))
     stop("choices.selected must be one of the choices")
 
-  radioButtons(ns("summary_sas"), label = tags$h5("Species/age class/sex"),
+  radioButtons(ns("summary_sas"), label = .lbl("Species/age class/sex"),
                choices = choices.list, selected = choices.selected)
 }
 

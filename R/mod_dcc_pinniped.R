@@ -10,10 +10,10 @@ mod_dcc_pinniped_ui <- function(id) {
         title = "Load Files", status = "warning", width = 4,
         solidHeader = FALSE, collapsible = TRUE,
         fileInput(ns("dcc_files_cabo"),
-                  tags$h5("Load raw DCC files from CABO station"),
+                  .lbl("Load raw DCC files from CABO station"),
                   multiple = TRUE, accept = .tamatoa.csv.accept),
         fileInput(ns("dcc_files_mad"),
-                  tags$h5("Load raw DCC files from MAD station"),
+                  .lbl("Load raw DCC files from MAD station"),
                   multiple = TRUE, accept = .tamatoa.csv.accept),
         helpText("Tamatoa will pull the DCC key from the database"),
         downloadButton(ns("key_download"), "Download database key"),
@@ -22,14 +22,14 @@ mod_dcc_pinniped_ui <- function(id) {
         title = "Summary and Filter Options", status = "warning",
         solidHeader = FALSE, width = 8, collapsible = TRUE,
         fluidRow(
-          column(4, radioButtons(ns("summary_type"), tags$h5("Summary type"),
+          column(4, radioButtons(ns("summary_type"), .lbl("Summary type"),
                                  choices = c("Trips" = "trips",
                                              "Pings" = "pings",
                                              "All processed data" = "all"),
                                  selected = "trips")),
           column(4, uiOutput(ns("season"))),
           # uiOutput(ns("date_range")),
-          column(4, numericInput(ns("trip_hours"), tags$h5("Trip time gap (hours)"),
+          column(4, numericInput(ns("trip_hours"), .lbl("Trip time gap (hours)"),
                                  value = 24, min = 1, step = 1))
         ),
         # checkboxInput(ns("include_resights"), "Include resights as tx pings")
@@ -56,7 +56,7 @@ mod_dcc_pinniped_ui <- function(id) {
               column(
                 width = 6,
                 selectInput(ns("trips_summary_type"),
-                            tags$h5("Trips summary type"),
+                            .lbl("Trips summary type"),
                             choices = c("All trips for each seal" = "by_each",
                                         "For each seal, average across trips" = "by_pinniped",
                                         "For each trip number, average across seals" = "by_trip",
@@ -71,7 +71,7 @@ mod_dcc_pinniped_ui <- function(id) {
                 conditionalPanel(
                   condition = "input.trips_summary_type != 'trips'", ns = ns,
                   numericInput(ns("trip_num_max"),
-                               tags$h5("Maximum trip number to include"),
+                               .lbl("Maximum trip number to include"),
                                value = 6, min = 1, step = 1)
                 )
               )
@@ -135,7 +135,7 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
 
       ### Season
       output$season <- renderUI({
-        selectInput(session$ns("season"), tags$h5("Season"),
+        selectInput(session$ns("season"), .lbl("Season"),
                     choices = req(season.df())$season_name)
       })
 
@@ -143,7 +143,7 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
       # output$date_range <- renderUI({
       #   req(input$tx_key_type == "Database")
       #
-      #   dateRangeInput(session$ns("date_range"), tags$h5("Date range"),
+      #   dateRangeInput(session$ns("date_range"), .lbl("Date range"),
       #                  start = max(req(season.df())$season_open_date))
       # })
 
@@ -192,7 +192,7 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
 
         # Return widget
         selectInput(session$ns("tag_freq_code"),
-                    tags$h5("Select at least one 'tag | frequency | code'"),
+                    .lbl("Select at least one 'tag | frequency | code'"),
                     choices = tag_freq_code_choices_all(),
                     selected = selected,
                     multiple = TRUE)

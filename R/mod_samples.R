@@ -19,7 +19,7 @@ mod_samples_ui <- function(id) {
         fluidRow(
           column(
             width = 6,
-            selectInput(ns("summary"), tags$h5("Summary"),
+            selectInput(ns("summary"), .lbl("Summary"),
                         choices = c("Sample inventory" = "inventory",
                                     "Sample type" = "type"),
                         selected = "inventory")
@@ -29,7 +29,7 @@ mod_samples_ui <- function(id) {
             width = 6,
             conditionalPanel(
               condition = "input.summary == 'inventory'", ns = ns,
-              radioButtons(ns("inventory_summ"), tags$h5("Summarize by"),
+              radioButtons(ns("inventory_summ"), .lbl("Summarize by"),
                            choices = c("All samples" = "all",
                                        "Sample type" = "sample_type",
                                        "Sample type group" = "sample_type_group"),
@@ -37,7 +37,7 @@ mod_samples_ui <- function(id) {
             ),
             conditionalPanel(
               condition = "input.summary == 'type'", ns = ns,
-              radioButtons(ns("type_summ"), tags$h5("Summarize by"),
+              radioButtons(ns("type_summ"), .lbl("Summarize by"),
                            choices = c("DNA - Ethanol" = "dna_etoh",
                                        "DNA - RNALater" = "dna_rnalater"))
             )
@@ -69,7 +69,7 @@ mod_samples_server <- function(id, src, season.df, tab) {
 
       ### Season
       output$season <- renderUI({
-        selectInput(session$ns("season"), tags$h5("Season"),
+        selectInput(session$ns("season"), .lbl("Season"),
                     choices = req(season.df())$season_name)
       })
 
@@ -100,7 +100,7 @@ mod_samples_server <- function(id, src, season.df, tab) {
       #   }
       #
       #   radioButtons(
-      #     session$ns("summary_type"), tags$h5("Summarize by:"),
+      #     session$ns("summary_type"), .lbl("Summarize by:"),
       #     choices = choices
       #   )
       # })

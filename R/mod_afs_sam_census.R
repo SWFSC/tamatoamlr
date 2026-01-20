@@ -96,7 +96,7 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
         beaches.list <- sort(unique(census.df$location_group))
 
         selectInput(
-          session$ns("location"), tags$h5("Location(s)"),
+          session$ns("location"), .lbl("Location(s)"),
           choices = beaches.list, multiple = TRUE
         )
       })
@@ -117,7 +117,7 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
         # )
 
         selectInput(
-          session$ns("age_sex"), tags$h5("Columns to plot"),
+          session$ns("age_sex"), .lbl("Columns to plot"),
           choices = census.names, selected = census.names,
           multiple = TRUE, selectize = TRUE
         )

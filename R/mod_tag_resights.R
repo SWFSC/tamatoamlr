@@ -12,7 +12,7 @@ mod_tag_resights_ui <- function(id) {
         mod_filter_season_ui(ns("filter_season")),
         # fluidRow(
         #   column(6,
-        selectInput(ns("species"), tags$h5("Species"), #inline = TRUE,
+        selectInput(ns("species"), "Species", #inline = TRUE,
                     choices = tamatoamlr::pinniped.sp.study,
                     selected = tamatoamlr::pinniped.sp.study,
                     multiple = TRUE, selectize = TRUE)
@@ -39,7 +39,7 @@ mod_tag_resights_ui <- function(id) {
                  "and then specify any filters you would like to apply"),
         fluidRow(
           column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single"))),
-          column(6,  radioButtons(ns("summary_type"), tags$h5("Summarize by"),
+          column(6,  radioButtons(ns("summary_type"), .lbl("Summarize by"),
                                   choices = c("Pinniped" = "pinniped",
                                               "Resights by season" = "table",
                                               "Species" = "species"),
@@ -120,7 +120,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       #     choices <- c(choices, "Resights by season" = "table")
       #   }
       #
-      #   radioButtons(session$ns("summary_type"), tags$h5("Summarize by"),
+      #   radioButtons(session$ns("summary_type"), .lbl("Summarize by"),
       #                choices = choices, selected = "species")
       # })
 
@@ -137,7 +137,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
 
         selectInput(
           session$ns("pinniped"),
-          tags$h5("Pinnipeds to include (Species | Primary Tag"),
+          .lbl("Pinnipeds to include (Species | Primary Tag"),
           choices = choices.list, selected = choices.list,
           multiple = TRUE, selectize = TRUE
         )
@@ -154,7 +154,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       #
       #   selectInput(
       #     session$ns("table_season"),
-      #     tags$h5("Only include pinnipeds with at least ",
+      #     .lbl("Only include pinnipeds with at least ",
       #             "one resight in the selected season(s)"),
       #     choices = seasons, selected = seasons,
       #     multiple = TRUE, selectize = TRUE
@@ -420,8 +420,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
           species = tr_summary_species(),
           pinniped = tr_summary_pinniped(),
           table = tr_summary_table(),
-          validate(paste("Invalid summary_type input -",
-                         "please contact the database manager"))
+          .validate_else("summary_type")
         )
       })
 
@@ -432,7 +431,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
         #--------------------------------------------------------
         fs <- filter_season()
         ggplot.out <- NULL
-        validate("No plot for tag resights")
+        validate("No plot for tag resights, yet")
 
         # Output
         ggplot.out

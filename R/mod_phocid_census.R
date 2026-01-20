@@ -12,15 +12,15 @@ mod_phocid_census_ui <- function(id) {
         #   column(9, mod_filter_season_ui(ns("filter_season"))),
         #   column(
         #     width = 3, #offset = 1,
-        #     checkboxGroupInput(ns("species"), label = tags$h5("Species"),
+        #     checkboxGroupInput(ns("species"), label = .lbl("Species"),
         #                        choices = tamatoamlr::pinniped.phocid.sp,
         #                        selected = tamatoamlr::pinniped.phocid.sp)
         #   )
         mod_filter_season_ui(ns("filter_season")),
-        # checkboxGroupInput(ns("species"), tags$h5("Species"), inline = TRUE,
+        # checkboxGroupInput(ns("species"), .lbl("Species"), inline = TRUE,
         #                    choices = tamatoamlr::pinniped.phocid.sp,
         #                    selected = tamatoamlr::pinniped.phocid.sp),
-        selectInput(ns("species"), tags$h5("Species"), #inline = TRUE,
+        selectInput(ns("species"), .lbl("Species"), #inline = TRUE,
                     choices = tamatoamlr::pinniped.phocid.sp,
                     selected = tamatoamlr::pinniped.phocid.sp,
                     multiple = TRUE, selectize = TRUE),
@@ -127,7 +127,7 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
         }
 
         selectInput(
-          session$ns("location"), tags$h5("Location(s)"),
+          session$ns("location"), .lbl("Location(s)"),
           choices = beaches.list, multiple = TRUE
         )
       })
@@ -137,7 +137,7 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
         req(input$summary_sas == "by_sp_age_sex")
 
         selectInput(
-          session$ns("age_sex"), tags$h5("Columns to plot"),
+          session$ns("age_sex"), .lbl("Columns to plot"),
           choices = .census.cols.phocid, selected = .census.cols.phocid[[1]],
           multiple = TRUE, selectize = TRUE
         )

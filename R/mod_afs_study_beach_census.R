@@ -94,7 +94,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
         # TODO: update to pulling from Beaches?
 
         selectInput(
-          session$ns("location"), tags$h5("Location(s)"),
+          session$ns("location"), .lbl("Location(s)"),
           choices = beaches.list, multiple = TRUE
         )
       })
@@ -115,7 +115,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
         )
 
         selectInput(
-          session$ns("age_sex"), tags$h5("Columns to plot"),
+          session$ns("age_sex"), .lbl("Columns to plot"),
           choices = c("pup_total_count", tamatoamlr::afs.study.beach.counts),
           selected = c("pup_total_count", "pup_live_count", "pup_dead_count"),
           multiple = TRUE, selectize = TRUE
