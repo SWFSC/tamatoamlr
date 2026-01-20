@@ -12,7 +12,7 @@
 
 
 #-------------------------------------------------------------------------------
-#
+# For module checks: check that all items in ... are reactive
 .mod_check <- function(...) {
   for (i in list(...)) {
     stopifnot(is.reactive(i))

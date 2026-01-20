@@ -19,8 +19,8 @@
 #' @importFrom DT DTOutput renderDT
 #' @importFrom forcats fct
 #' @importFrom glue glue
-#' @importFrom lubridate day days days_in_month is.Date month today week year mdy
-#'   mdy_hms ymd ymd_hms
+#' @importFrom lubridate day days days_in_month is.Date month today week year
+#'   mdy mdy_hms ymd ymd_hms
 #' @importFrom odbc odbc dbConnect
 #' @importFrom pool dbIsValid dbGetQuery poolClose
 #' @importFrom purrr pmap_dbl pmap_lgl set_names

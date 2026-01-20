@@ -11,7 +11,7 @@
 
 
 .summary.timing.choices.list <- list(
-  "Multiple seasons - total" = "fs_mult_total",
+  "Multiple seasons - totals" = "fs_mult_total",
   # "Multiple seasons - by week" = "fs_week",
   # "Multiple seasons - date series" = "fs_date_series",
   "Multiple seasons - by date" = "fs_mult_date",
