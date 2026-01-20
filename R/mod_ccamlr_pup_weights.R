@@ -20,9 +20,9 @@ mod_ccamlr_pup_weights_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_raw"))), #"fs_facet",
+          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_mult_raw"))), #"fs_facet",
           conditionalPanel(
-            condition = "input.summary_timing != 'fs_raw'", ns = ns,
+            condition = "input.summary_timing != 'fs_mult_raw'", ns = ns,
             column(6, radioButtons(ns("summary_type"), .lbl("Summarize by"),
                                    choices = c("Mean weight" = "weight",
                                                "Growth rate" = "metric"),
@@ -36,7 +36,7 @@ mod_ccamlr_pup_weights_ui <- function(id) {
           )
         ),
         conditionalPanel(
-          condition = "input.summary_timing != 'fs_raw'", ns = ns,
+          condition = "input.summary_timing != 'fs_mult_raw'", ns = ns,
           checkboxInput(ns("sex_grp"), "Separate weights by sex", value = TRUE)
         )
       )
@@ -198,7 +198,7 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       tbl_output <- reactive({
         si.dmp <- season.df() %>% select(season_name, date_median_pupping)
 
-        df.out <- if (input$summary_timing == "fs_raw") {
+        df.out <- if (input$summary_timing == "fs_mult_raw") {
           cpw_df_filtered()
 
         } else {
@@ -228,7 +228,7 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       ### Output plot
       plot_output <- reactive({
         validate(
-          need(input$summary_type != "fs_raw",
+          need(input$summary_type != "fs_mult_raw",
                "There is no plot for raw data summary")
         )
         cpw.df <- cpw_df() %>%

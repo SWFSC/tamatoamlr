@@ -21,7 +21,7 @@ mod_afs_capewide_pup_census_ui <- function(id) {
                  "and then specify any filters you would like to apply"),
         # TODO: add notes about CWP data from other years and eg SSI surveys
         fluidRow(
-          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_raw"))),
+          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_mult_raw"))),
           column(6, .summaryLocationUI(ns, c("by_capewide", "by_amlr", "by_beach"),
                                        "by_capewide", FALSE))
         ),
@@ -32,7 +32,7 @@ mod_afs_capewide_pup_census_ui <- function(id) {
                         value = FALSE)
         ),
         conditionalPanel(
-          condition = "(input.summary_location == 'by_beach' | input.summary_location == 'by_amlr') & input.summary_timing != 'fs_raw'",
+          condition = "(input.summary_location == 'by_beach' | input.summary_location == 'by_amlr') & input.summary_timing != 'fs_mult_raw'",
           ns = ns,
           checkboxInput(ns("loc_agg"), "Aggregate across selected locations",
                         value = FALSE)
@@ -103,7 +103,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
         } else if (input$summary_timing == "fs_mult_total") {
           helpText("Note: Data with the 'exclude_count' flag will always",
                    "be removed when summarizing over multiple seasons")
-        }  else if (input$summary_timing == "fs_raw") {
+        }  else if (input$summary_timing == "fs_mult_raw") {
           helpText("Note: All data, including entries where the 'exclude_count'",
                    " flag is TRUE, are included in the raw data output")
         } else {
@@ -165,7 +165,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
           input$summary_location == "by_beach" ||
             input$summary_location == "by_amlr")
 
-        input$loc_agg && summ.loc &&input$summary_timing != "fs_raw"
+        input$loc_agg && summ.loc &&input$summary_timing != "fs_mult_raw"
       })
 
       #-------------------------------------------------------------------------
@@ -409,7 +409,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       tbl_output <- reactive({
         census.df <- census_df_filter_location()
 
-        if (req(input$summary_timing) == "fs_raw") {
+        if (req(input$summary_timing) == "fs_mult_raw") {
           census.df %>% select(-c(census_afs_capewide_pup_sort, pup_count))
         } else if (input$summary_timing == "fs_single") {
           census_df_fs_single()
@@ -424,7 +424,7 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       ### Output plot
       plot_output <- reactive({
-        if (req(input$summary_timing) == "fs_raw") {
+        if (req(input$summary_timing) == "fs_mult_raw") {
           validate("There is no plot for raw data summary")
         } else if (input$summary_timing == "fs_single") {
           plot_fs_single()

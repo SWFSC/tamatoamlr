@@ -38,8 +38,8 @@ mod_tag_resights_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
-          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single"))),
-          column(6,  radioButtons(ns("summary_type"), .lbl("Summarize by"),
+          column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_mult_raw"))),
+          column(6,  radioButtons(ns("summary_type"), .lbl("c by"),
                                   choices = c("Pinniped" = "pinniped",
                                               "Resights by season" = "table",
                                               "Species" = "species"),
@@ -325,9 +325,9 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
         tr_df_filter_ka() %>%
           # collect() %>% #See NOTE above
           # tag_sort(tag.sort = TRUE, tag.sort.primary = TRUE) %>%
-          tag_sort(col = tag_primary, .drop = FALSE) %>%
           mutate(species = str_to_sentence(species),
-                 species = factor(species, levels = sort(unique(species))))
+                 species = factor(species, levels = sort(unique(species)))) %>%
+          tag_sort(col = tag_primary, species, .drop = FALSE)
       })
 
 
@@ -415,13 +415,17 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       ### Output table
       tbl_output <- reactive({
-        switch(
-          req(input$summary_type),
-          species = tr_summary_species(),
-          pinniped = tr_summary_pinniped(),
-          table = tr_summary_table(),
-          .validate_else("summary_type")
-        )
+        if (input$summary_timing == "fs_mult_raw") {
+          browser()
+        } else {
+          switch(
+            req(input$summary_type),
+            species = tr_summary_species(),
+            pinniped = tr_summary_pinniped(),
+            table = tr_summary_table(),
+            .validate_else("summary_type")
+          )
+        }
       })
 
 

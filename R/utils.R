@@ -53,7 +53,8 @@
   choices.args <- match.arg(choices, several.ok = TRUE)
 
   if (!all(choices.args %in% .summary.timing.choices.list))
-    stop("Need to update internal function - please contact the database manager")
+    stop("Need to update internal function - ",
+         "please contact the database manager")
 
   # Need to do the in to keep as named list
   choices.list <- .summary.timing.choices.list[
@@ -64,7 +65,7 @@
   if (!(selected %in% choices.list))
     stop("selected must be one of the choices")
 
-  radioButtons(ns("summary_timing"), label = .lbl("Summary timing"),
+  radioButtons(ns("summary_timing"), label = .lbl("Timing"),
                choices = choices.list, selected = selected)
 }
 
