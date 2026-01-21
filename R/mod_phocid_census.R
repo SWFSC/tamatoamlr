@@ -6,8 +6,8 @@ mod_phocid_census_ui <- function(id) {
   # assemble UI elements
   tagList(
     fluidRow(
-      box(
-        title = "Filters", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Filters", width = 6,
         # fluidRow(
         #   column(9, mod_filter_season_ui(ns("filter_season"))),
         #   column(
@@ -28,8 +28,8 @@ mod_phocid_census_ui <- function(id) {
         uiOutput(ns("age_sex_uiOut_selectize")),
         uiOutput(ns("location_uiOut_selectize"))
       ),
-      box(
-        title = "Summary options", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Summary options", width = 6,
         helpText("This tab allows you to summarize and visualize phocid census data. ",
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),

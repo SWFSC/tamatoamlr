@@ -6,9 +6,8 @@ mod_tag_resights_ui <- function(id) {
   # assemble UI elements
   tagList(
     fluidRow(
-      box(
-        title = "Filters", status = "warning", solidHeader = FALSE,
-        width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Filters", width = 6,
         mod_filter_season_ui(ns("filter_season")),
         # fluidRow(
         #   column(6,
@@ -31,22 +30,31 @@ mod_tag_resights_ui <- function(id) {
         #   uiOutput(ns("pinniped_uiOut_selectize"))
         # )
       ),
-      box(
-        title = "Summary options", status = "warning", solidHeader = FALSE,
-        width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Summary options", width = 6,
         helpText("This tab allows you to summarize and visualize tag resight data. ",
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply"),
         fluidRow(
           column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_mult_raw"))),
-          column(6,  radioButtons(ns("summary_type"), .lbl("c by"),
-                                  choices = c("Pinniped" = "pinniped",
-                                              "Resights by season" = "table",
-                                              "Species" = "species"),
-                                  selected = "species"))
+          column(6,  radioButtons(ns("summary_type"), .lbl("Summarize by"),
+                                  choices =  c("Pinniped" = "pinniped",
+                                               "Resights by season" = "table",
+                                               "Species" = "species")))
           # column(4, uiOutput(ns("table_season_uiOut_selectize")))
         ),
-        checkboxInput(ns("ka"), "Include only resights of known-age pinnipeds")
+        checkboxInput(ns("ka"), "Include only resights of known-age pinnipeds"),
+        uiOutput(ns("raw_search_box"))
+        # conditionalPanel(
+        #   "input.summary_timing == 'fs_mult_raw'", ns = ns,
+        #   # amlr_box(
+        #   #   title = "Search options", width = 12,
+        #   box(
+        #     title = "Search options", width = 12, collapsible = TRUE,
+        #     tags$h5("Search options"),
+        #     helpText("todo")
+        #   )
+        # )
       )
     ),
     mod_output_ui(
@@ -95,6 +103,22 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       #   # vals$beaches_selected  <- NULL
       #   vals$census_tbl_columns_selected <- NULL
       # })
+
+      observeEvent(input$summary_timing, {
+        choices <- if (input$summary_timing == "fs_mult_raw") {
+          c(
+            "Pinniped" = "pinniped",
+            "All data - no summaries" = "raw"
+          )
+        } else {
+          c(
+            "Pinniped" = "pinniped",
+            "Resights by season" = "table",
+            "Species" = "species"
+          )
+        }
+        updateRadioButtons(session, "summary_type", choices = choices)
+      })
 
 
       ##########################################################################
@@ -160,6 +184,25 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       #     multiple = TRUE, selectize = TRUE
       #   )
       # })
+
+
+      output$raw_search_box <- renderUI({
+        req(input$summary_timing == "fs_mult_raw")
+
+
+
+        # tagList(
+        box(
+          title = "Search options", width = 12, collapsible = TRUE,
+          tags$h5("The search options allow "),
+          helpText("things todo"),
+          helpText("Search for tag by regex"),
+          helpText("Search by filter for tag_left/tag_right/s/ac"),
+          helpText("Search by filter for tag number"),
+          selectInput(session$ns("tmp"), "select",
+                      choices = c(1, 2))
+        )
+      })
 
 
       ##########################################################################
@@ -336,7 +379,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       #------------------------------------------------------------------------
       ### Summarize multiseason tag resight data, for display
       tr_summary_table <- reactive({
-        req(input$summary_type == "table")
+        req(req(input$summary_type) == "table")
 
         # Generate pinniped_ids with 1+ resights in the selected season(s)
         p.keep <- tr_df() %>%
@@ -369,6 +412,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       ### Summarize single season tag resight data, for display
       tr_summary_species <- reactive({
         req(input$summary_type == "species")
+
         tr_df() %>%
           arrange(species, resight_date) %>% #for tag list order
           mutate(species = as.character(species)) %>%
@@ -382,6 +426,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
 
       tr_summary_pinniped <- reactive({
         req(input$summary_type == "pinniped")
+
         ps <- ps_df_collect() %>%
           select(season_info_id, pinniped_id, attendance_study,
                  arrival_date, parturition, parturition_date, twins,
@@ -416,7 +461,13 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       ### Output table
       tbl_output <- reactive({
         if (input$summary_timing == "fs_mult_raw") {
-          browser()
+          # browser()
+          switch(
+            req(input$summary_type),
+            pinniped = tr_summary_pinniped(),
+            raw = tr_df(),
+            .validate_else("summary_type")
+          )
         } else {
           switch(
             req(input$summary_type),
