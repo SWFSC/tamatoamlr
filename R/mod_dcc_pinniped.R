@@ -25,7 +25,7 @@ mod_dcc_pinniped_ui <- function(id) {
           column(4, radioButtons(ns("summary_type"), .lbl("Summary type"),
                                  choices = c("Trips" = "trips",
                                              "Pings" = "pings",
-                                             "All processed data" = "all"),
+                                             "Raw data" = "all"),
                                  selected = "trips")),
           column(4, uiOutput(ns("season"))),
           # uiOutput(ns("date_range")),
@@ -38,9 +38,12 @@ mod_dcc_pinniped_ui <- function(id) {
           title = NULL, solidHeader = FALSE, width = 12, collapsible = FALSE,
           conditionalPanel(
             condition = "input.summary_type == 'all'", ns = ns,
-            helpText("The below data are all raw DCC data for pings",
-                     "that can be joined with the MicroVHF database key, and",
-                     "filtered by deployment/recovery dates")
+            helpText("The below data are all raw DCC data in the uploaded files",
+                     "Pings that can be joined with the MicroVHF database key,",
+                     "have been joined, but all pings are included."),
+            radioButtons(ns("all_join"), .lbl("Raw data options"),
+                         choices = c("Show only raw DCC info" = "dcc",
+                                     "Join DCC data with MicroVHF key" = "join"))
           ),
           conditionalPanel(
             condition = "input.summary_type == 'pings'", ns = ns,
@@ -55,8 +58,7 @@ mod_dcc_pinniped_ui <- function(id) {
             fluidRow(
               column(
                 width = 6,
-                selectInput(ns("trips_summary_type"),
-                            .lbl("Trips summary type"),
+                selectInput(ns("trips_summary_type"), .lbl("Trips summary type"),
                             choices = c("All trips for each seal" = "by_each",
                                         "For each seal, average across trips" = "by_pinniped",
                                         "For each trip number, average across seals" = "by_trip",
@@ -78,17 +80,17 @@ mod_dcc_pinniped_ui <- function(id) {
             )
           )
         ),
-        uiOutput(ns("tag_freq_code_uiOut_select")),
-        actionButton(ns("tag_freq_code_all"), "Select all seals"),
-        actionButton(ns("tag_freq_code_pupped"), "Select all seals with pups"),
-        actionButton(ns("tag_freq_code_clear"), "Clear all selections")
+        uiOutput(ns("tag_freq_code_uiOut")),
+        # uiOutput(ns("select_buttons_uiOut"))
+        # actionButton(ns("tag_freq_code_all"), "Select all seals"),
+        # actionButton(ns("tag_freq_code_pupped"), "Select all seals with pups"),
+        # actionButton(ns("tag_freq_code_clear"), "Clear all selections")
       ),
       mod_output_ui(
         ns("out"),
         tags$br(),
         uiOutput(ns("warning_na_records")),
-        tags$strong("Summary text for sit rep:"),
-        textOutput(ns("trip_txt"))
+        uiOutput(ns("trip_txt"))
       )
     )
   )
@@ -171,8 +173,14 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
           unlist() %>% unname()
       })
 
-      ### Generate seletInput
-      output$tag_freq_code_uiOut_select <- renderUI({
+      freq_code_choices_all <- reactive({
+        dcc_formatted() %>%
+          distinct(freq_code) %>%
+          pull()
+      })
+
+      ### Generate seletInput, and associated actionButtons
+      output$tag_freq_code_uiOut <- renderUI({
         validate(
           need(isTruthy(input$dcc_files_cabo$datapath) | isTruthy(input$dcc_files_mad$datapath),
                "Load CABO and MAD DCC files to be able to select a 'tag | frequency | code'")
@@ -191,26 +199,54 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
         })
 
         # Return widget
-        selectInput(session$ns("tag_freq_code"),
-                    .lbl("Select at least one 'tag | frequency | code'"),
-                    choices = tag_freq_code_choices_all(),
-                    selected = selected,
-                    multiple = TRUE)
+        if (input$summary_type == "all") {
+          tagList(
+            selectInput(session$ns("freq_code"),
+                        .lbl("Select at least one 'frequency | code'"),
+                        choices = freq_code_choices_all(),
+                        selected = freq_code_choices_all(),
+                        multiple = TRUE),
+            actionButton(session$ns("freq_code_all"), "Select all"),
+            actionButton(session$ns("freq_code_clear"), "Clear all selections")
+          )
+        } else {
+          tagList(
+            selectInput(session$ns("tag_freq_code"),
+                        .lbl("Select at least one 'tag | frequency | code'"),
+                        choices = tag_freq_code_choices_all(),
+                        selected = selected,
+                        multiple = TRUE),
+            actionButton(session$ns("tag_freq_code_all"), "Select all seals"),
+            actionButton(session$ns("tag_freq_code_pupped"), "Select all seals with pups"),
+            actionButton(session$ns("tag_freq_code_clear"), "Clear all selections")
+          )
+        }
       })
+
+      # output$select_buttons_uiOut <- renderUI({
+      #   if input$
+      # })
 
       ### Action buttons to set pre-specified tag/freq/codes
       observeEvent(input$tag_freq_code_all, {
         updateSelectInput(session, "tag_freq_code",
                           selected = tag_freq_code_choices_all())
       })
-
       observeEvent(input$tag_freq_code_pupped, {
         updateSelectInput(session, "tag_freq_code",
                           selected = tag_freq_code_choices_pupped())
       })
-
       observeEvent(input$tag_freq_code_clear, {
         updateSelectInput(session, "tag_freq_code",
+                          selected = character(0))
+      })
+
+      observeEvent(input$freq_code_all, {
+        updateSelectInput(session, "freq_code",
+                          selected = freq_code_choices_all())
+      })
+      observeEvent(input$freq_code_clear, {
+        updateSelectInput(session, "freq_code",
                           selected = character(0))
       })
 
@@ -247,7 +283,8 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
       dcc_formatted <- reactive({
         bind_rows(dcc_files_cabo(), dcc_files_mad()) %>%
           dcc_format() %>%
-          arrange(freq, code, datetime)
+          arrange(freq, code, datetime) %>%
+          mutate_freq_code()
       })
 
 
@@ -301,9 +338,8 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
       ##########################################################################
       # Join key and dcc data, and finish DCC data processing
 
-      ### All processed DCC data
-      dcc_processed <- reactive({
-        # if (input$include_resights) validate("resights are not yet incorporated")
+      ## Join DCC and key data, and filter by deployment dates
+      dcc_key_join <- reactive({
         inner_join(microvhf_key(), dcc_formatted(),
                    by = join_by(freq, code), relationship = "many-to-many") %>%
           # group_by(freq, code) %>%
@@ -311,8 +347,15 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
           # ungroup() %>%
           rename(tag = tag_primary) %>%
           relocate(tag, .before = freq) %>%
-          dcc_calc_trips(trip.hours = input$trip_hours) %>%
           mutate_tag_freq_code()
+      })
+
+      ### All processed DCC data
+      dcc_processed <- reactive({
+        # if (input$include_resights) validate("resights are not yet incorporated")
+        dcc_key_join() %>%
+          select(-freq_code) %>%
+          dcc_calc_trips(trip.hours = input$trip_hours)
       })
 
       ### Processed DCC data, filtered for parturition and selected tag/freq/code
@@ -424,6 +467,45 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
         } else {
           .validate_else("trip_lengths_summary_type")
         }
+      })
+
+
+      ### Raw data
+      raw <- reactive({
+        validate(
+          need(input$freq_code, "Please select at least one 'freq | code'")
+        )
+
+        raw.out <- if (input$all_join == "dcc") {
+          dcc_formatted() %>%
+            filter(freq_code %in% input$freq_code) %>%
+            arrange(freq, code, datetime)
+
+        } else if (input$all_join == "join") {
+          freq.code.proc <-  dcc_key_join() %>%
+            distinct(freq_code) %>%
+            pull(freq_code)
+
+          dcc_formatted() %>%
+            filter(!(freq_code %in% freq.code.proc)) %>%
+            bind_rows(dcc_key_join()) %>%
+            relocate(tag, .before = freq)
+
+        } else {
+          .validate_else("all_join")
+        }
+
+        # dcc_processed() %>%
+        #   mutate(date = as.Date(datetime),
+        #          time = format(datetime, "%H:%M:%S")) %>%
+        #   relocate(date, time, .after = datetime)
+
+        raw.out %>%
+          filter(freq_code %in% input$freq_code) %>%
+          mutate(date = as.Date(datetime),
+                 time = format(datetime, "%H:%M:%S")) %>%
+          relocate(date, time, .after = datetime) %>%
+          arrange(freq, code, datetime)
       })
 
 
@@ -574,12 +656,15 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
           glue("{trip.txt} for the {trip.num.txt} trip")
         }, df = t.mean.trips)
 
-        glue(
-          "As of ####, the average trip length across all completed trips is ",
-          dcc_text_format(t.mean.all), ". ",
-          "All seals in the study have now completed their #### trips. ",
-          "The {updated} average trip lengths are ",
-          paste(trips.list, collapse = ", "), "."
+        tagList(
+          tags$strong("Summary text for sit rep:"),
+          tags$h5(glue(
+            "As of ####, the average trip length across all completed trips is ",
+            dcc_text_format(t.mean.all), ". ",
+            "All seals in the study have now completed their #### trips. ",
+            "The {updated} average trip lengths are ",
+            paste(trips.list, collapse = ", "), "."
+          ))
         )
       })
 
@@ -596,12 +681,9 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
         } else if (input$summary_type == "pings") {
           pings()
         } else if (input$summary_type == "all") {
-          dcc_processed() %>%
-            mutate(date = as.Date(datetime),
-                   time = format(datetime, "%H:%M:%S")) %>%
-            relocate(date, time, .after = datetime)
+          raw()
         } else {
-          validate("invalid summary_type - please contact the database manager")
+          .validate_else("summary_type")
         }
       })
 
@@ -618,11 +700,10 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
         } else if (input$summary_type == "pings") {
           pings_plot()
         } else if (input$summary_type == "all") {
-          validate("No summary plot for all processed data")
+          validate("No summary plot for raw data")
         } else {
-          validate("invalid summary_type - please contact the database manager")
+          .validate_else("summary_type")
         }
-        # validate("plot in the works..")
       })
 
 

@@ -126,6 +126,8 @@ utils::globalVariables(c(
   "fish_type", "krill_type", "squid_type",
   "process_date", "processor", "sample_num", "sample_source", "tag_id",
 
+  "freq_code",
+
   # vTakes
   "take_date", "individual_id", "individual_identifier", "individual_id_source",
   "n_takes", "table_name", "take_notes", "sample_types", "record_id",

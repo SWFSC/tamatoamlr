@@ -2,28 +2,42 @@
 % Please edit documentation in R/mutate_tag_freq_code.R
 \name{mutate_tag_freq_code}
 \alias{mutate_tag_freq_code}
+\alias{mutate_freq_code}
 \title{Create tag/freq/code ID column}
 \usage{
 mutate_tag_freq_code(x)
+
+mutate_freq_code(x)
 }
 \arguments{
-\item{x}{data frame; must contain 'tag', 'freq', and 'code' columns}
+\item{x}{data frame; must contain required subset of 'tag', 'freq', and
+'code' columns}
 }
 \value{
-\code{x}, with the new column 'tag_freq_code' calculated as
-\code{paste(tag, freq, code, sep = " | ")}
+\code{x}, with a new column, either 'tag_freq_code' calculated as
+\code{paste(tag, freq, code, sep = " | ")} for \code{mutate_tag_freq_code()},
+or 'freq_code' calculated as
+\code{paste(freq, code, sep = " | ")} for \code{mutate_freq_code()}
 }
 \description{
-A 'wrapper' around mutate that creates a new tag/freq/code ID column
+A 'wrapper' around mutate that creates a new freq/code or  tag/freq/code ID
+column
 }
 \details{
-A wrapper around \code{\link[dplyr]{mutate}} that pastes the tag,
-freq, and code values together to create a single identifying string.
-Typically used in \code{\link[=mod_dcc_pinniped_server]{mod_dcc_pinniped_server()}} or other Pinniped DCC data
-processing scripts
+\code{mutate_tag_freq_code()} is a wrapper around \code{\link[dplyr:mutate]{dplyr::mutate()}} that pastes
+the tag, freq, and code values together to create a single identifying
+string.
+
+\code{mutate_freq_code()} is the same principle, but only pastes together the freq
+and code values.
+
+These functions are typically used in \code{\link[=mod_dcc_pinniped_server]{mod_dcc_pinniped_server()}}, or other
+Pinniped DCC data processing scripts.
 }
 \examples{
 x <- data.frame(tag = "A21", freq = 164.105, code = 12)
 mutate_tag_freq_code(x)
+
+mutate_freq_code(x)
 
 }
