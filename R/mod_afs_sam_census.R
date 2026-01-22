@@ -6,32 +6,30 @@ mod_afs_sam_census_ui <- function(id) {
   # assemble UI elements
   tagList(
     fluidRow(
-      box(
-        title = "Filters", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
+      amlr_box(
+        title = "Filters", width = 6,
         fluidRow(
           column(12, mod_filter_season_ui(ns("filter_season")))
         ),
-
         uiOutput(ns("age_sex_uiOut_selectize")),
         uiOutput(ns("location_uiOut_selectize"))
       ),
-      box(
-        title = "Summary options", status = "warning", solidHeader = FALSE, width = 6, collapsible = TRUE,
-        helpText("This tab allows you to summarize and visualize AFS SAM census data. ",
+      amlr_box(
+        title = "Summary options", width = 6,
+        helpText("This tab allows you to summarize and visualize AFS SAM census data.",
                  "Select how you wish to summarize this data, ",
-                 "and then specify any filters you would like to apply"),
+                 "and then specify any filters you would like to apply. "),
         fluidRow(
-          column(
-            width = 4,
-            # .summaryTimingUI(ns, c("fs_date_single", "fs_single")),
-            .summaryTimingUI(ns, c("fs_single")),
-          ),
-          column(4, .summaryLocationUI(ns, c("by_capewide", "by_beach"), "by_capewide", FALSE)),
+          column(4, .summaryTimingUI(ns, c("fs_mult_date", "fs_single", "fs_mult_raw"))),
+          column(4, .summaryLocationUI(ns, c("by_capewide", "by_beach"),
+                                       "by_capewide", FALSE)),
           column(4, .summarySpAgeSexUI(ns, c("by_sp_age_sex"), "by_sp_age_sex"))
         ),
-        helpText("Note that locations (i.e., the 'location' column in the",
-                 "table output) are always grouped", tags$br(),
-                 "helptext todo")
+        conditionalPanel(
+          "input.summary_timing != 'fs_mult_raw", ns = ns,
+          helpText("Note that locations (i.e., the 'location' column in the",
+                   "table output) are always grouped")
+        )
       )
     ),
     mod_output_ui(
@@ -179,13 +177,15 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
         #----------------------------------------------
         # Filter by season/date/week num
         fs <- filter_season()
+        season.curr <- req(fs$season())
 
         census.df <- if (input$summary_timing %in% .summary.timing.multiple) {
           census.df.orig %>%
-            filter(season_name %in% !!req(fs$season()))
+            filter(season_name %in% season.curr)
         } else if (input$summary_timing %in% .summary.timing.single) {
+          req(length(season.curr) == 1)
           census.df.orig %>%
-            filter(season_name == !!req(fs$season()),
+            filter(season_name == season.curr,
                    between(census_date,
                            !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
         } else {
@@ -194,72 +194,12 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
 
         #----------------------------------------------
         # Do additional date single filtering, if necessary
-        # NOTE: if this is updated,
-        #   you probably should update the code in mod_afs_study_beach_census
-        if (input$summary_timing == "fs_date_single") {
-          req(fs$month(), fs$day())
-          fs.date.df <- data.frame(
-            season_name = fs$season(),
-            m = fs$month(),
-            d = fs$day()
-          )
-          days.max <- 3
-
-          census.df.ds.orig <- census.df %>%
-            left_join(fs.date.df, by = "season_name") %>%
-            mutate(season_date = amlr_date_from_season(season_name, m, d),
-                   days_diff = as.numeric(
-                     difftime(census_date, season_date, units = "days")),
-                   days_diff = if_else(days_diff < 0, abs(days_diff)-0.5, days_diff)) %>%
-            group_by(season_name) %>%
-            filter(days_diff == min(days_diff))
-
-          census.df.ds <- census.df.ds.orig %>%
-            filter(days_diff <= days.max) %>%
-            select(-c(m, d, season_date)) %>%
-            ungroup()
-
-          if (length(unique(census.df.ds$season_name)) != length(unique(census.df.ds$census_date)))
-            validate(paste("Error in AFS SAM census data single summaries -",
-                           "please contact the database manager"))
-
-          nrow.diff <- nrow(census.df.ds.orig) - nrow(census.df.ds)
-
-          validate(
-            need(nrow(census.df.ds) > 0,
-                 paste("There are no census records for the",
-                       "selected season(s) within", days.max,
-                       "days of the provided date",
-                       paste0("(", fs$month(), " ", fs$day(), ")")))
-          )
-
-          # Warning message for seasons w/o census record close enough
-          if (nrow.diff != 0) {
-            seasons.rmd <- census.df.ds.orig %>%
-              filter(!(season_name %in% unique(census.df.ds$season_name))) %>%
-              distinct(season_name) %>%
-              arrange(season_name) %>%
-              select(season_name) %>%
-              unlist()
-
-            vals$warning_date_single_filter <- paste(
-              "The following seasons do not have SAM census records within",
-              days.max, "days of the provided date",
-              paste0("(", fs$month(), " ", fs$day(), "):"),
-              paste(seasons.rmd, collapse = ", ")
-            )
-          } else {
-            vals$warning_date_single_filter <- NULL
-          }
-
-          census.df <- census.df.ds
+        if (input$summary_timing == "fs_mult_date") {
+          req(fs$mult_date())
+          census.df <- mult_date_filter(census.df, census_date, fs, vals)
         }
 
-        # if (input$summary_timing == "fs_week") {
-        #   census.df <- census.df %>%
-        #     filter(week_num == as.numeric(!!req(fs$week())))
-        # }
-
+        #----------------------------------------------
         validate(
           need(nrow(census.df) > 0,
                "There are no data for the given season filter(s)")
@@ -318,14 +258,28 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       ### Output table
       tbl_output <- reactive({
-        census_df()
+        if (input$summary_timing == "fs_mult_raw") {
+          census_df_filter_location() %>%
+            # select(-c(beach_id, census_created_dt)) %>%
+            select(season_name, census_type, observer,
+                   census_date, time_start, time_end, location, location_group,
+                   species, !!!as.list(input$age_sex), census_notes, census_id)
+        } else {
+          census_df()
+        }
       })
 
 
       #-------------------------------------------------------------------------
       ### Output plot
       plot_output <- reactive({
+        validate(
+          need(input$summary_timing != "fs_mult_raw", "No plot for raw data")
+        )
         census.df.orig <- census_df()
+        fs <- filter_season()
+
+        # browser()
 
         #--------------------------------------------------------
         # Set some plot variable depending on user selections
@@ -341,14 +295,19 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
 
         y.lab <- "Count"
 
-        fs <- filter_season()
+        md <- if (input$summary_timing == "fs_mult_date") {
+          paste(day(fs$mult_date()), month.abb[month(fs$mult_date())])
+        } else {
+          ""
+        }
+
         gg.title <- case_when(
-          input$summary_timing == "fs_total" ~
-            "AFS SAM Census - Totals by Season",
-          input$summary_timing == "fs_date_single" ~
-            paste("AFS SAM Census - Closest to", fs$month(), fs$day()),
+          # input$summary_timing == "fs_total" ~
+          #   "AFS SAM Census - Totals by Season",
+          input$summary_timing == "fs_mult_date" ~
+            paste("AFS SAM Census - Closest to", md),
           input$summary_timing == "fs_single" ~
-            paste("AFS SAM Census -", fs$season()),
+            paste("AFS SAM Census -", fs$season()[1]),
           TRUE ~ "Title todo"
         )
 

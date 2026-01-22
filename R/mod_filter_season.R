@@ -14,9 +14,13 @@ mod_filter_season_ui <- function(id) {
   tagList(
     fluidRow(
       uiOutput(ns("season_uiOut_select")),
-      uiOutput(ns("date_range_uiOut_dateRange"))
+      uiOutput(ns("date_range_uiOut_dateRange")),
+      column(12, uiOutput(ns("season_uiOut_buttons")))
     ),
-    uiOutput(ns("season_uiOut_buttons")),
+    tags$br(),
+    # fluidRow(
+    #   column(12, ))
+    # ),
     fluidRow(
       # dateInput(ns("mult_date"), .lbl("Select date"))
 
