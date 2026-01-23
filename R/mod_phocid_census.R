@@ -8,23 +8,11 @@ mod_phocid_census_ui <- function(id) {
     fluidRow(
       amlr_box(
         title = "Filters", width = 6,
-        # fluidRow(
-        #   column(9, mod_filter_season_ui(ns("filter_season"))),
-        #   column(
-        #     width = 3, #offset = 1,
-        #     checkboxGroupInput(ns("species"), label = .lbl("Species"),
-        #                        choices = tamatoamlr::pinniped.phocid.sp,
-        #                        selected = tamatoamlr::pinniped.phocid.sp)
-        #   )
         mod_filter_season_ui(ns("filter_season")),
-        # checkboxGroupInput(ns("species"), .lbl("Species"), inline = TRUE,
-        #                    choices = tamatoamlr::pinniped.phocid.sp,
-        #                    selected = tamatoamlr::pinniped.phocid.sp),
         selectInput(ns("species"), .lbl("Species"), #inline = TRUE,
                     choices = tamatoamlr::pinniped.phocid.sp,
                     selected = tamatoamlr::pinniped.phocid.sp,
                     multiple = TRUE, selectize = TRUE),
-
         uiOutput(ns("age_sex_uiOut_selectize")),
         uiOutput(ns("location_uiOut_selectize"))
       ),
@@ -230,11 +218,6 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
           census.df <- mult_date_filter(census.df, census_date_start, fs, vals)
         }
 
-        # if (input$summary_timing == "fs_week") {
-        #   census.df <- census.df %>%
-        #     filter(week_num == as.numeric(!!req(fs$week())))
-        # }
-
         #----------------------------------------------
         validate(
           need(nrow(census.df) > 0,
@@ -357,7 +340,7 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
             arrange_season(season.df(), !!!syms(dplyr::intersect(grp.names.all[-1], names(.))))
 
         } else {
-          validate("Invalid input$summary_sas value")
+          .validate_else("summary_sas")
         }
 
 
@@ -398,6 +381,7 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
             summarise(n_header_records = n_distinct(census_phocid_header_id)) %>%
             right_join(df.out, by = "season_name") %>%
             select(season_name, .data$n_header_records, everything())
+
         } else if (input$summary_timing == "fs_mult_date") {
           census_df_filter_location() %>%
             group_by(season_name) %>%
@@ -406,6 +390,7 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
                       census_date_end = unique(census_date_end)) %>%
             right_join(df.out, by = "season_name") %>%
             select(season_name, .data$n_header_records, everything())
+
         } else{
           df.out %>% select(season_name, !!sym(census.date), everything())
         }

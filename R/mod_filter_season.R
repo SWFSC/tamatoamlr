@@ -18,16 +18,8 @@ mod_filter_season_ui <- function(id) {
       column(12, uiOutput(ns("season_uiOut_buttons")))
     ),
     tags$br(),
-    # fluidRow(
-    #   column(12, ))
-    # ),
     fluidRow(
-      # dateInput(ns("mult_date"), .lbl("Select date"))
-
       uiOutput(ns("mult_date_uiOut"))
-      # column(4, uiOutput(ns("month_uiOut_select"))),
-      # column(4, uiOutput(ns("day_uiOut_select"))),
-      # column(4, uiOutput(ns("today_uiOut_action")))
     )
 
     # fluidRow(
@@ -171,9 +163,8 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
 
         tagList(
           column(6, dateInput(session$ns("mult_date"), .lbl("Select date"))),
-          # column(8, helpText("The year of the date selected does not matter;",
-          #                    "only the month and day will be used")),
-          column(6, numericInput(session$ns("mult_max_gap"), .lbl("Max gap (days)"),
+          column(6, numericInput(session$ns("mult_max_gap"),
+                                 .lbl("Max gap (days)"),
                                  value = 7, min = 1, step = 1)),
           column(12, helpText("Find the records closest to the selected date",
                               "for all selected seasons.",
@@ -184,18 +175,6 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
                               "for the record to be considered valid"))
         )
       })
-
-
-      #------------------------------------------------------------------------
-      # # Week dropdown - for multiple season by week only
-      # output$week_uiOut_select <- renderUI({
-      #   req(summ.level() == "fs_week", input$season)
-      #
-      #   selectInput(
-      #     session$ns("week"), .lbl("Select week (calendar year)"),
-      #     choices = 1:53, selected = 1, multiple = FALSE,
-      #   )
-      # })
 
 
       #------------------------------------------------------------------------
@@ -228,7 +207,6 @@ mod_filter_season_server <- function(id, summ.level, season.df) {
       list(
         season = out_season,
         date_range = reactive(input$date_range),
-        # week = reactive(input$week),
         mult_date = reactive(input$mult_date),
         mult_max_gap = reactive(input$mult_max_gap)
       )

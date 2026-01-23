@@ -91,7 +91,6 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
         req(input$summary_location == "by_beach")
         census.df <- census_df_filter_season()
         beaches.list <- sort(unique(census.df$location_group))
-        # TODO: update to pulling from Beaches?
 
         selectInput(
           session$ns("location"), .lbl("Location(s)"),
@@ -101,7 +100,9 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
 
       ### Columns dropdown
       output$age_sex_uiOut_selectize <- renderUI({
-        req(input$summary_sas == "by_sp_age_sex", src())
+        # req(input$summary_sas == "by_sp_age_sex", src())
+        req(src())
+
         census.names <- names(census_df_collect())
         choices.names.cs <- census.names[
           grepl("_count", census.names) | grepl("_sum", census.names)]
@@ -176,16 +177,18 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
       census_df_filter_season <- reactive({
         census.df.orig <- census_df_collect()
         vals$warning_mult_date_filter <- NULL
+
         #----------------------------------------------
         # Filter by season/date/week num
         fs <- filter_season()
+        season.curr <- req(fs$season())
 
         census.df <- if (input$summary_timing %in% .summary.timing.multiple) {
           census.df.orig %>%
-            filter(season_name %in% !!req(fs$season()))
+            filter(season_name %in% season.curr)
         } else if (input$summary_timing %in% .summary.timing.single) {
           census.df.orig %>%
-            filter(season_name == !!req(fs$season()),
+            filter(season_name == season.curr,
                    between(census_date,
                            !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
         } else {
@@ -218,12 +221,6 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
           validate(need(input$location, "Please select at least one beach name"))
           census.df <- census.df %>% filter(location_group %in% input$location)
         } else if (input$summary_location == "by_amlr") {
-          # tbl(pool(), "beaches") %>%
-          #   collect() %>%
-          #   filter(!is.na(study_beach_season_start_id)) %>%
-          #   select(name) %>%
-          #   arrange(name) %>%
-          #   unlist() %>% unname()
           census.df <- census.df %>% filter(location_group %in% .amlr.beaches)
         }
 
@@ -255,6 +252,10 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
             mutate(pup_dead_count = cumsum(pup_dead_count),
                    .by = location_group)
         }
+
+        validate(
+          need(input$age_sex, "Please select at least one age/sex class")
+        )
 
         census.df %>%
           mutate(pup_total_count = pup_live_count + pup_dead_count) %>%
@@ -341,7 +342,8 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
 
         census.df <- census.df %>%
           select(-n_records) %>%
-          pivot_longer(cols = where(is.numeric), names_to = "count_class",
+          pivot_longer(cols = where(is.numeric),
+                       names_to = "count_class",
                        values_to = "count_value") %>%
           arrange_season(season.df(), !!!syms(grp_names_chr()), count_class)
 

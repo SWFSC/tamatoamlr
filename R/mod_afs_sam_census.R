@@ -20,10 +20,10 @@ mod_afs_sam_census_ui <- function(id) {
                  "Select how you wish to summarize this data, ",
                  "and then specify any filters you would like to apply. "),
         fluidRow(
-          column(4, .summaryTimingUI(ns, c("fs_mult_date", "fs_single", "fs_mult_raw"))),
-          column(4, .summaryLocationUI(ns, c("by_capewide", "by_beach"),
+          column(6, .summaryTimingUI(ns, c("fs_mult_date", "fs_single", "fs_mult_raw"))),
+          column(6, .summaryLocationUI(ns, c("by_capewide", "by_beach"),
                                        "by_capewide", FALSE)),
-          column(4, .summarySpAgeSexUI(ns, c("by_sp_age_sex"), "by_sp_age_sex"))
+          # column(4, .summarySpAgeSexUI(ns, c("by_sp_age_sex"), "by_sp_age_sex"))
         ),
         conditionalPanel(
           "input.summary_timing != 'fs_mult_raw", ns = ns,
@@ -101,7 +101,7 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
 
       ### Columns dropdown
       output$age_sex_uiOut_selectize <- renderUI({
-        req(input$summary_sas == "by_sp_age_sex", src())
+        req(src())
         census.names <- c("ad_male_count", "juv_male_count", "juv_unk_count")
         choices.names.cs <- census.names[
           grepl("_count", census.names) | grepl("_sum", census.names)]
@@ -174,6 +174,8 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
       ### Filter data by species, season/date, and remove NA values
       census_df_filter_season <- reactive({
         census.df.orig <- census_df_collect()
+        vals$warning_mult_date_filter <- NULL
+
         #----------------------------------------------
         # Filter by season/date/week num
         fs <- filter_season()
