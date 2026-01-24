@@ -24,7 +24,7 @@
 #' @importFrom odbc odbc dbConnect
 #' @importFrom pool dbIsValid dbGetQuery poolClose
 #' @importFrom purrr pmap_dbl pmap_lgl set_names
-#' @importFrom rlang .data enquo is_bool is_character
+#' @importFrom rlang .data enquo is_bool is_character is_string
 #' @importFrom scales hue_pal
 #' @importFrom shinybusy add_busy_spinner
 #' @importFrom shinydashboard box dashboardBody tabItems tabItem dashboardHeader

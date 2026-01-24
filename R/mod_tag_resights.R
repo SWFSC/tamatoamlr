@@ -284,32 +284,35 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       ### Filter data by season/date
       tr_df_filter_season <- reactive({
-        tr.df.orig <- tr_df_collect()
-
-        #----------------------------------------------
-        # Filter by season/date/week num
-        fs <- filter_season()
-        season.curr <- req(fs$season())
-
-        tr.df <- if (input$summary_timing %in% .summary.timing.multiple) {
-          tr.df.orig %>%
-            filter(season_name %in% season.curr)
-        } else if (input$summary_timing %in% .summary.timing.single) {
-          req(length(season.curr) == 1)
-          tr.df.orig %>%
-            filter(season_name == season.curr,
-                   between(resight_date,
-                           !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
-        } else {
-          validate("invalid input$summary_timing value")
-        }
-
-        validate(
-          need(nrow(tr.df) > 0,
-               "There are no data for the given season/date filter(s)")
+        filter_timing(
+          tr_df_collect(), resight_date, filter_season(), input$summary_timing
         )
-
-        tr.df
+        # tr.df.orig <- tr_df_collect()
+        #
+        # #----------------------------------------------
+        # # Filter by season/date/week num
+        # fs <- filter_season()
+        # season.curr <- req(fs$season())
+        #
+        # tr.df <- if (input$summary_timing %in% .summary.timing.multiple) {
+        #   tr.df.orig %>%
+        #     filter(season_name %in% season.curr)
+        # } else if (input$summary_timing %in% .summary.timing.single) {
+        #   req(length(season.curr) == 1)
+        #   tr.df.orig %>%
+        #     filter(season_name == season.curr,
+        #            between(resight_date,
+        #                    !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
+        # } else {
+        #   validate("invalid input$summary_timing value")
+        # }
+        #
+        # validate(
+        #   need(nrow(tr.df) > 0,
+        #        "There are no data for the given season/date filter(s)")
+        # )
+        #
+        # tr.df
       })
 
 

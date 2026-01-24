@@ -41,7 +41,10 @@ mod_ccamlr_pup_weights_ui <- function(id) {
         )
       )
     ),
-    mod_output_ui(ns("out"))
+    mod_output_ui(
+      ns("out"),
+      tags$br(), uiOutput(ns("warning_na_records"))
+    )
   )
 }
 
@@ -58,9 +61,9 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       ##########################################################################
       # General
 
-      # vals <- reactiveValues(
-      #   warning_na_records = NULL
-      # )
+      vals <- reactiveValues(
+        warning_na_records = NULL
+      )
 
       ### Get filter_season values
       filter_season <- reactive({
@@ -73,10 +76,10 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       ##########################################################################
       # RenderUIs
 
-      # ### Warning messages
-      # output$warning_na_records <- renderUI({
-      #   span(req(vals$warning_na_records), style = "color:red;")
-      # })
+      ### Warning messages
+      output$warning_na_records <- renderUI({
+        span(req(vals$warning_na_records), style = "color:red;")
+      })
 
       ### Round number
       output$round_num_uiOut<- renderUI({
@@ -100,10 +103,9 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       # Collect all cpw data - one time run, then all data is collected
       cpw_df_collect <- reactive({
         req(src(), tab() == .id.list$cpw)
-        # vals$warning_na_records <- NULL
 
         validate(
-          need(try(tbl(req(src()), "vCCAMLR_Pup_Weights"), silent = TRUE),
+          need(try(tbl_vCCAMLR_Pup_Weights(src()), silent = TRUE),
                "Unable to find vCCAMLR_Pup_Weights on specified database")
         )
 
@@ -118,28 +120,32 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       ### Filter data by species, season/date, and remove NA values
       cpw_df_filter_season <- reactive({
-        cpw.df.orig <- cpw_df_collect()
-        # Filter by season/date/week num
-        fs <- filter_season()
-
-        cpw.df <- if (input$summary_timing %in% .summary.timing.multiple) {
-          cpw.df.orig %>%
-            filter(season_name %in% !!req(fs$season()))
-        } else if (input$summary_timing %in% .summary.timing.single) {
-          cpw.df.orig %>%
-            filter(season_name == !!req(fs$season()),
-                   between(round_date,
-                           !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
-        } else {
-          validate("invalid input$summary_timing value")
-        }
-
-        validate(
-          need(nrow(cpw.df) > 0,
-               "There are no data for the given season filter(s)")
+        filter_timing(
+          cpw_df_collect(), round_date, filter_season(), input$summary_timing
         )
 
-        cpw.df
+        # cpw.df.orig <- cpw_df_collect()
+        # # Filter by season/date/week num
+        # fs <- filter_season()
+        #
+        # cpw.df <- if (input$summary_timing %in% .summary.timing.multiple) {
+        #   cpw.df.orig %>%
+        #     filter(season_name %in% !!req(fs$season()))
+        # } else if (input$summary_timing %in% .summary.timing.single) {
+        #   cpw.df.orig %>%
+        #     filter(season_name == !!req(fs$season()),
+        #            between(round_date,
+        #                    !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
+        # } else {
+        #   validate("invalid input$summary_timing value")
+        # }
+        #
+        # validate(
+        #   need(nrow(cpw.df) > 0,
+        #        "There are no data for the given season filter(s)")
+        # )
+        #
+        # cpw.df
       })
 
       #-------------------------------------------------------------------------
@@ -157,7 +163,32 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       ### Filtered df
       cpw_df_filtered <- reactive({
-        cpw_df_round_sex()
+        vals$warning_na_records <- NULL
+        df.orig <- cpw_df_round_sex()
+
+        #----------------------------------------------
+        # Filter records for non-NA values, verbosely, as appropriate
+        df.nona <- df.orig %>%
+          filter(!is.na(mass_kg))
+
+        nrow.diff <- nrow(df.orig) - nrow(df.nona)
+        vals$warning_na_records <- if (nrow.diff != 0) {
+          paste(
+            nrow.diff,
+            ifelse(nrow.diff == 1, "row was", "rows were"),
+            "removed because of a NULL mass_kg value.",
+            "If this is not expected, please tell the database manager."
+          )
+        } else {
+          NULL
+        }
+
+        validate(
+          need(nrow(df.nona) > 0,
+               "No data to process after removing rows with NA mass values")
+        )
+
+        df.nona
       })
 
 
@@ -171,8 +202,6 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
 
         if (input$summary_type == "weight") {
           cpw.grp %>%
-            filter(!is.na(mass_kg)) %>%
-            # TODO: make warning message
             summarise(mean_mass_kg = round(mean(mass_kg), 2),
                       n_weights = n(),
                       min_mass_kg = min(mass_kg),

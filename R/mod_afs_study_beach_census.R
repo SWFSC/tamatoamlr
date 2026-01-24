@@ -175,40 +175,44 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       ### Filter data by species, season/date, and remove NA values
       census_df_filter_season <- reactive({
-        census.df.orig <- census_df_collect()
-        vals$warning_mult_date_filter <- NULL
-
-        #----------------------------------------------
-        # Filter by season/date/week num
-        fs <- filter_season()
-        season.curr <- req(fs$season())
-
-        census.df <- if (input$summary_timing %in% .summary.timing.multiple) {
-          census.df.orig %>%
-            filter(season_name %in% season.curr)
-        } else if (input$summary_timing %in% .summary.timing.single) {
-          census.df.orig %>%
-            filter(season_name == season.curr,
-                   between(census_date,
-                           !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
-        } else {
-          .validate_else("summary_timing")
-        }
-
-        #----------------------------------------------
-        # Do additional date single filtering, if necessary
-        if (input$summary_timing == "fs_mult_date") {
-          req(fs$mult_date())
-          census.df <- mult_date_filter(census.df, census_date, fs, vals)
-        }
-
-        #----------------------------------------------
-        validate(
-          need(nrow(census.df) > 0,
-               "There are no data for the given season filter(s)")
+        filter_timing(
+          census_df_collect(), census_date, filter_season(),
+          input$summary_timing
         )
-
-        census.df
+        # census.df.orig <- census_df_collect()
+        # vals$warning_mult_date_filter <- NULL
+        #
+        # #----------------------------------------------
+        # # Filter by season/date/week num
+        # fs <- filter_season()
+        # season.curr <- req(fs$season())
+        #
+        # census.df <- if (input$summary_timing %in% .summary.timing.multiple) {
+        #   census.df.orig %>%
+        #     filter(season_name %in% season.curr)
+        # } else if (input$summary_timing %in% .summary.timing.single) {
+        #   census.df.orig %>%
+        #     filter(season_name == season.curr,
+        #            between(census_date,
+        #                    !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
+        # } else {
+        #   .validate_else("summary_timing")
+        # }
+        #
+        # #----------------------------------------------
+        # # Do additional date single filtering, if necessary
+        # if (input$summary_timing == "fs_mult_date") {
+        #   req(fs$mult_date())
+        #   census.df <- mult_date_filter(census.df, census_date, fs, vals)
+        # }
+        #
+        # #----------------------------------------------
+        # validate(
+        #   need(nrow(census.df) > 0,
+        #        "There are no data for the given season filter(s)")
+        # )
+        #
+        # census.df
       })
 
 

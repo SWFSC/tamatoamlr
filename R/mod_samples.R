@@ -34,13 +34,13 @@ mod_samples_ui <- function(id) {
                                        "Sample type" = "sample_type",
                                        "Sample type group" = "sample_type_group"),
                            selected = "all")
-            ),
-            conditionalPanel(
-              condition = "input.summary == 'type'", ns = ns,
-              radioButtons(ns("type_summ"), .lbl("Summarize by"),
-                           choices = c("DNA - Ethanol" = "dna_etoh",
-                                       "DNA - RNALater" = "dna_rnalater"))
             )
+            # conditionalPanel(
+            #   condition = "input.summary == 'type'", ns = ns,
+            #   radioButtons(ns("type_summ"), .lbl("Summarize by"),
+            #                choices = c("DNA - Ethanol" = "dna_etoh",
+            #                            "DNA - RNALater" = "dna_rnalater"))
+            # )
           )
         ),
         conditionalPanel(

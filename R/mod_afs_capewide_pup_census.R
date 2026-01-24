@@ -171,32 +171,36 @@ mod_afs_capewide_pup_census_server <- function(id, src, season.df, tab) {
       #-------------------------------------------------------------------------
       ### Filter data by species, season/date, and remove NA values
       census_df_filter_season <- reactive({
-        census.df.orig <- census_df_collect()
-        #----------------------------------------------
-        # Filter by season/date/week num
-        fs <- filter_season()
-
-        census.df <- if (input$summary_timing %in% .summary.timing.multiple) {
-          census.df.orig %>%
-            filter(season_name %in% !!req(fs$season()))
-        } else if (input$summary_timing %in% .summary.timing.single) {
-          census.df.orig %>%
-            filter(season_name == !!req(fs$season()),
-                   between(census_date,
-                           !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
-        } else {
-          .validate_else("summary_timing")
-        }
-
-        # TODO: add warning message about time of year if 2021/22 data is included
-
-        validate(
-          need(nrow(census.df) > 0,
-               "There are no data for the given season filter(s)")
+        filter_timing(
+          census_df_collect(), census_date, filter_season(),
+          input$summary_timing
         )
-
-        census.df %>%
-          mutate(season_name = factor(season_name))
+        # census.df.orig <- census_df_collect()
+        # #----------------------------------------------
+        # # Filter by season/date/week num
+        # fs <- filter_season()
+        #
+        # census.df <- if (input$summary_timing %in% .summary.timing.multiple) {
+        #   census.df.orig %>%
+        #     filter(season_name %in% !!req(fs$season()))
+        # } else if (input$summary_timing %in% .summary.timing.single) {
+        #   census.df.orig %>%
+        #     filter(season_name == !!req(fs$season()),
+        #            between(census_date,
+        #                    !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
+        # } else {
+        #   .validate_else("summary_timing")
+        # }
+        #
+        # # TODO: add warning message about time of year if 2021/22 data is included
+        #
+        # validate(
+        #   need(nrow(census.df) > 0,
+        #        "There are no data for the given season filter(s)")
+        # )
+        #
+        # census.df %>%
+        #   mutate(season_name = factor(season_name))
       })
 
 

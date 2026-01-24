@@ -1,17 +1,22 @@
-#' Multiple season date filter
+#' Filter timing functions
 #'
-#' Filter for records near a month/day across multiple seasons
+#' Functions used in filtering based on summary timing
 #'
-#' @param df data frame of all records, to filter
-#' @param date.col column in `x` with record date info
+#' @param df input data frame
+#' @param date.col <tidy-select> (link todo) column in `df` with date info
 #' @param fs list with season/filter info. Intended to be the output of
 #'   [mod_filter_season_server()]
+#' @param summary.timing character; intended to be `input$summary_timing`
+#'   value from whatever module function is called from
 #' @param vals if `NULL` (default), then ignored. If not `NULL`, then must be a
 #'   [shiny::reactiveValues()] with a named object `warning_mult_date_filter`,
 #'   to which to write associated warning messages
 #'
 #' @details
-#' This function is used to filter pinniped records, typically census values,
+#' `filter_timing` TODO
+#'
+#' `filter_mult_date` a specific filter timing subfunction.
+#' It is used to filter pinniped records, typically census values,
 #' for the records that are closes to a given month/day. This is done for each
 #' season in the data frame; only one set of records is kept per season.
 #'
@@ -23,11 +28,58 @@
 #' `vals$warning_mult_date_filter` if `df` has records from a season, but no
 #' records within the max gap from the filter date
 #'
-#' @return The filtered data frame.
+#' @returns Both functions return a (filtered) data frame.
 #'
+#' @name filter_timing
 #' @export
-mult_date_filter <- function(df, date.col, fs, vals = NULL) {
-  date.col.enquo <- enquo(date.col)
+filter_timing <- function(df, date.col, fs, summary.timing, vals = NULL) {
+  stopifnot(
+    inherits(df, "data.frame"),
+    is.list(fs),
+    is.reactive(fs$season),
+    is.reactive(fs$date_range),
+    is_string(summary.timing)
+  )
+
+  #----------------------------------------------
+  season.curr <- req(fs$season())
+
+  out <- if (summary.timing %in% .summary.timing.multiple) {
+    df %>%
+      filter(season_name %in% season.curr)
+  } else if (summary.timing %in% .summary.timing.single) {
+    req(length(season.curr) == 1, fs$date_range())
+    df %>%
+      filter(season_name == season.curr,
+             between({{ date.col }}, fs$date_range()[1], fs$date_range()[2]))
+  } else {
+    .validate_else(summary.timing)
+  }
+
+  #----------------------------------------------
+  # Do additional date single filtering, if necessary
+  if (summary.timing == "fs_mult_date") {
+    req(fs$mult_date())
+    out <- filter_mult_date(out, {{ date.col }}, fs, vals)
+  }
+
+  #----------------------------------------------
+  # Check, and output
+  validate(
+    need(nrow(out) > 0,
+         "There are no data for the given season timing filter(s)")
+  )
+
+  out
+}
+
+
+#' @name filter_timing
+#' @export
+filter_mult_date <- function(df, date.col, fs, vals = NULL) {
+  stopifnot(
+    is.list(fs)
+  )
 
   m <- month(req(fs$mult_date()))
   m.abb <- month.abb[m]
@@ -44,7 +96,7 @@ mult_date_filter <- function(df, date.col, fs, vals = NULL) {
     left_join(fs.date.df, by = "season_name") %>%
     mutate(season_date = amlr_date_from_season(season_name, m, d),
            days_diff = as.numeric(
-             difftime(!!date.col.enquo, season_date, units = "days")),
+             difftime({{ date.col }}, season_date, units = "days")),
            days_diff = if_else(days_diff < 0, abs(days_diff)-0.5, days_diff)) %>%
     group_by(season_name) %>%
     filter(days_diff == min(days_diff))
@@ -65,8 +117,8 @@ mult_date_filter <- function(df, date.col, fs, vals = NULL) {
 
   validate(
     need(nrow(df.filtered) > 0,
-         glue("There are no records for the",
-              "selected season(s) within {max.gap}",
+         glue("There are no records for the ",
+              "selected season(s) within {max.gap} ",
               "days of the provided date of {d} {m.abb}"))
   )
 
@@ -94,3 +146,4 @@ mult_date_filter <- function(df, date.col, fs, vals = NULL) {
 
   df.filtered
 }
+
