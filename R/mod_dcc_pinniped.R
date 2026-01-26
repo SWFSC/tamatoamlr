@@ -628,7 +628,7 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
 
       #-------------------------------------------------------------------------
       ### Sit rep text
-      output$trip_txt <- renderText({
+      output$trip_txt <- renderUI({
         req(input$trips_summary_type == "by_all")
 
         t.mean.all <- trip_mean_by_all()
@@ -662,7 +662,7 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
             "As of ####, the average trip length across all completed trips is ",
             dcc_text_format(t.mean.all), ". ",
             "All seals in the study have now completed their #### trips. ",
-            "The {updated} average trip lengths are ",
+            "The updated average trip lengths are ",
             paste(trips.list, collapse = ", "), "."
           ))
         )
