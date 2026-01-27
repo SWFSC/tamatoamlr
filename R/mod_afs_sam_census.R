@@ -35,7 +35,7 @@ mod_afs_sam_census_ui <- function(id) {
     mod_output_ui(
       ns("out"),
       tags$br(), uiOutput(ns("warning_na_records")),
-      uiOutput(ns("warning_date_single_filter"))
+      uiOutput(ns("warning_mult_date_filter"))
     )
   )
 }
@@ -70,9 +70,11 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
       ##########################################################################
       # Census-specific common values
       vals <- reactiveValues(
-        warning_na_records = NULL,
-        warning_date_single_filter = NULL
+        warning_na_records = NULL
+        # warning_mult_date_filter = NULL
       )
+
+      warning_mult_date_filter <- reactiveVal()
 
 
       ##########################################################################
@@ -83,8 +85,8 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
         span(req(vals$warning_na_records), style = "color:red;")
       })
 
-      output$warning_date_single_filter <- renderUI({
-        span(req(vals$warning_date_single_filter), style = "color:red;")
+      output$warning_mult_date_filter <- renderUI({
+        span(req(warning_mult_date_filter()), style = "color:red;")
       })
 
       ### Locations dropdown
@@ -175,7 +177,7 @@ mod_afs_sam_census_server <- function(id, src, season.df, tab) {
       census_df_filter_season <- reactive({
         filter_timing(
           census_df_collect(), census_date, filter_season(),
-          input$summary_timing
+          input$summary_timing, warning_mult_date_filter
         )
         # census.df.orig <- census_df_collect()
         # vals$warning_mult_date_filter <- NULL

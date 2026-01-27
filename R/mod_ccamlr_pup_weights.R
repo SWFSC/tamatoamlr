@@ -319,7 +319,7 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
 
         ggplot.title <- case_when(
           input$summary_timing == "fs_single" ~
-            paste("CCAMLR Pup Weights -", filter_season()$season()),
+            glue("CCAMLR Pup Weights - {filter_season()$season()}"),
           input$summary_timing == "fs_mult_total" ~ "CCAMLR Pup Weights"
         )
 

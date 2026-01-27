@@ -69,9 +69,10 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
       ##########################################################################
       # Census-specific common values
       vals <- reactiveValues(
-        warning_na_records = NULL,
-        warning_mult_date_filter = NULL
+        warning_na_records = NULL
+        # warning_mult_date_filter = NULL
       )
+      warning_mult_date_filter <- reactiveVal()
 
 
       ##########################################################################
@@ -83,7 +84,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
       })
 
       output$warning_mult_date_filter <- renderUI({
-        span(req(vals$warning_mult_date_filter), style = "color:red;")
+        span(req(warning_mult_date_filter()), style = "color:red;")
       })
 
       ### Locations dropdown
@@ -177,7 +178,7 @@ mod_afs_study_beach_census_server <- function(id, src, season.df, tab) {
       census_df_filter_season <- reactive({
         filter_timing(
           census_df_collect(), census_date, filter_season(),
-          input$summary_timing
+          input$summary_timing, warning_mult_date_filter
         )
         # census.df.orig <- census_df_collect()
         # vals$warning_mult_date_filter <- NULL
