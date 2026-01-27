@@ -27,12 +27,6 @@ mod_ccamlr_pup_weights_ui <- function(id) {
                                    choices = c("Mean weight" = "weight",
                                                "Growth rate" = "metric"),
                                    selected = "weight")),
-            # column(
-            #   width = 4,
-            #   tags$br(), tags$br(),
-            #   checkboxInput(ns("sex_grp"), "Separate weights by sex",
-            #                 value = TRUE)
-            # )
           )
         ),
         conditionalPanel(
@@ -223,6 +217,66 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
       # Outputs
 
       #-------------------------------------------------------------------------
+      ### Sit rep text
+      txt_output <- reactive({
+        req(input$summary_timing == "fs_single", input$sex_grp)
+        df <- tbl_output()
+
+        rounds.txt.list <- lapply(df$round_num,  function(i, df) {
+          df.curr <- df %>% filter(round_num == i)
+          i.txt <- case_when(
+            i == 1 ~ "first",
+            i == 2 ~ "second",
+            i == 3 ~ "third",
+            i == 4 ~ "fourth",
+            i == 5 ~ "fifth",
+            i == 6 ~ "sixth",
+          )
+
+          round.date <- unique(df.curr$round_date)
+          validate(
+            need(length(round.date) == 1, "Round date is not unique")
+          )
+
+          m.abb <- month.abb[month(round.date)]
+          d <- day(round.date)
+
+          f.mass <- round_logical(df.curr$mean_mass_kg_female, 1)
+          f.n <- df.curr$n_weights_female
+          f.min <- round_logical(df.curr$min_mass_kg_female, 1)
+          f.max <- round_logical(df.curr$max_mass_kg_female, 1)
+          f.sd <- round_logical(df.curr$mass_std_deviation_female, 1)
+
+          m.mass <- round_logical(df.curr$mean_mass_kg_male, 1)
+          m.n <- df.curr$n_weights_male
+          m.min <- round_logical(df.curr$min_mass_kg_male, 1)
+          m.max <- round_logical(df.curr$max_mass_kg_male, 1)
+          m.sd <- round_logical(df.curr$mass_std_deviation_male, 1)
+
+          tags$h5(glue(
+            "During the {i.txt} round of CCAMLR pup weights, on {m.abb} {d}, ",
+            "the average weights were {f.mass} kg ",
+            "(n={f.n}, range={f.min}-{f.max}, sd={f.sd}) for females, and ",
+            "{m.mass} kg (n={m.n}, range={m.min}-{m.max}, sd={m.sd}) for males."
+          ))
+
+          # During the second round of CCAMLR pup weights on 21 January, the
+          # average weights were 10.3 kg for females (n=20, range = 7.4 to 12,
+          # sd=1.2) and 12.4 kg for males (n=25, range = 9.6 to 16.4, sd=1.7).
+        }, df = df)
+
+        tagList(
+          tags$strong("Summary text for sit rep:"),
+          rounds.txt.list
+          # tags$h5(paste(rounds.txt.list, collapse = "\n"))
+        )
+      })
+
+      output$out_txt <- renderUI({
+        txt_output()
+      })
+
+      #-------------------------------------------------------------------------
       ### Output table
       tbl_output <- reactive({
         si.dmp <- season.df() %>% select(season_name, date_median_pupping)
@@ -294,7 +348,7 @@ mod_ccamlr_pup_weights_server <- function(id, src, season.df, tab) {
 
       #-------------------------------------------------------------------------
       ### Send off
-      observe(mod_output_server("out", tbl_output, plot_output))
+      observe(mod_output_server("out", tbl_output, plot_output, txt_output))
     }
   )
 }

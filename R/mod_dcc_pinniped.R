@@ -89,8 +89,7 @@ mod_dcc_pinniped_ui <- function(id) {
       mod_output_ui(
         ns("out"),
         tags$br(),
-        uiOutput(ns("warning_na_records")),
-        uiOutput(ns("trip_txt"))
+        uiOutput(ns("warning_na_records"))
       )
     )
   )
@@ -627,8 +626,27 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
       # Outputs
 
       #-------------------------------------------------------------------------
-      ### Sit rep text
-      output$trip_txt <- renderUI({
+      ### Table
+      tbl_output <- reactive({
+        if (input$summary_type == "trips") {
+          if (input$trips_summary_type == "by_each") {
+            if (input$trips_max) trips_max() else trips()
+          } else {
+            trips_means()
+          }
+        } else if (input$summary_type == "pings") {
+          pings()
+        } else if (input$summary_type == "all") {
+          raw()
+        } else {
+          .validate_else("summary_type")
+        }
+      })
+
+
+      #-------------------------------------------------------------------------
+      ### Text
+      txt_output <- reactive({
         req(input$trips_summary_type == "by_all")
 
         t.mean.all <- trip_mean_by_all()
@@ -670,25 +688,6 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
 
 
       #-------------------------------------------------------------------------
-      ### Table
-      tbl_output <- reactive({
-        if (input$summary_type == "trips") {
-          if (input$trips_summary_type == "by_each") {
-            if (input$trips_max) trips_max() else trips()
-          } else {
-            trips_means()
-          }
-        } else if (input$summary_type == "pings") {
-          pings()
-        } else if (input$summary_type == "all") {
-          raw()
-        } else {
-          .validate_else("summary_type")
-        }
-      })
-
-
-      #-------------------------------------------------------------------------
       ### Output plot
       plot_output <- reactive({
         if (input$summary_type == "trips") {
@@ -709,7 +708,7 @@ mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
 
       #-------------------------------------------------------------------------
       ### Send off
-      observe(mod_output_server("out", tbl_output, plot_output))
+      observe(mod_output_server("out", tbl_output, plot_output, txt_output))
 
 
       ##########################################################################
