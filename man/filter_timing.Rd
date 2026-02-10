@@ -5,9 +5,9 @@
 \alias{filter_mult_date}
 \title{Filter timing functions}
 \usage{
-filter_timing(df, date.col, fs, summary.timing, vals = NULL)
+filter_timing(df, date.col, fs, summary.timing, reactive.val = NULL)
 
-filter_mult_date(df, date.col, fs, vals = NULL)
+filter_mult_date(df, date.col, date.sel, max.gap)
 }
 \arguments{
 \item{df}{input data frame}
@@ -20,29 +20,47 @@ filter_mult_date(df, date.col, fs, vals = NULL)
 \item{summary.timing}{character; intended to be \code{input$summary_timing}
 value from whatever module function is called from}
 
-\item{vals}{if \code{NULL} (default), then ignored. If not \code{NULL}, then must be a
-\code{\link[shiny:reactiveValues]{shiny::reactiveValues()}} with a named object \code{warning_mult_date_filter},
-to which to write associated warning messages}
+\item{reactive.val}{if \code{NULL} (default), then ignored. If not \code{NULL}, then
+must be a \code{\link[shiny:reactiveVal]{shiny::reactiveVal()}} to which to write associated warning
+messages}
+
+\item{date.sel}{Date; the user-selected date; see Details for more info}
+
+\item{max.gap}{numeric; the maximum allowable gap between \code{date.sel} and the
+given record date}
 }
 \value{
-Both functions return a (filtered) data frame.
+\code{filter_timing} returns a (filtered) data frame. \code{filter_mult_date}
+returns a list of a filtered data frame, and warning text (described in
+details). The warning text is \code{NULL} if there are no warnings.
 }
 \description{
 Functions used in filtering based on summary timing
 }
 \details{
-\code{filter_timing} TODO
+\code{filter_timing} is a function used by most \code{\link[=tamatoa]{tamatoa()}} modules. Specifically,
+it provides a standardized way for modules that use the 'summary_timing'
+shiny widget to do their filtering of the collected dataframe.
 
-\code{filter_mult_date} a specific filter timing subfunction.
-It is used to filter pinniped records, typically census values,
-for the records that are closes to a given month/day. This is done for each
-season in the data frame; only one set of records is kept per season.
+\code{filter_timing} requires a dataframe, the column in that dataframe that
+contains the record date, the output of \code{\link[=mod_filter_season_server]{mod_filter_season_server()}} to
+access the seasons and other season-associated info specified by the user,
+and the summary timing value specified by the user. It also accepts a
+\code{\link[shiny:reactiveVal]{shiny::reactiveVal()}} object, for writing warning messages to be displayed
+in the shiny app.
 
-The date and the max gap are found in the fs object. Records are only kept if
-they are within a max gap (\code{fs$max_gap()}) in days from the provided date
-(\code{fs$mult_date()}).
+\code{filter_mult_date} a specific filter timing subfunction. It is used to filter
+records, typically census values, for the records that are closes to a given
+month/day. Specifically, for each season, only the set of records that are
+closest to the month and day of the user-specified date is kept.
 
-If \code{vals} is not \code{NULL}, then a warning message is written to
-\code{vals$warning_mult_date_filter} if \code{df} has records from a season, but no
-records within the max gap from the filter date
+When called by \code{filter_timing}, the date and the max gap are found in the
+\code{fs} object (\code{fs$max_gap()} and \code{fs$mult_date()}, respectively). However,
+\code{filter_mult_date} is designed to not depend on any reactive values, so that
+is could be run by non-AMLR users if useful (e.g., users of the CS_PHOC
+dataset).
+
+If \code{reactive.val} is not \code{NULL}, then a warning message is written to it if
+\code{df} has records from a season, but no records within the max gap from the
+filter date.
 }

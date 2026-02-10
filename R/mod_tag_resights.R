@@ -285,34 +285,11 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       ### Filter data by season/date
       tr_df_filter_season <- reactive({
         filter_timing(
-          tr_df_collect(), resight_date, filter_season(), input$summary_timing
+          df = tr_df_collect(),
+          date.col = resight_date,
+          fs = filter_season(),
+          summary.timing = input$summary_timing
         )
-        # tr.df.orig <- tr_df_collect()
-        #
-        # #----------------------------------------------
-        # # Filter by season/date/week num
-        # fs <- filter_season()
-        # season.curr <- req(fs$season())
-        #
-        # tr.df <- if (input$summary_timing %in% .summary.timing.multiple) {
-        #   tr.df.orig %>%
-        #     filter(season_name %in% season.curr)
-        # } else if (input$summary_timing %in% .summary.timing.single) {
-        #   req(length(season.curr) == 1)
-        #   tr.df.orig %>%
-        #     filter(season_name == season.curr,
-        #            between(resight_date,
-        #                    !!req(fs$date_range())[1], !!req(fs$date_range())[2]))
-        # } else {
-        #   validate("invalid input$summary_timing value")
-        # }
-        #
-        # validate(
-        #   need(nrow(tr.df) > 0,
-        #        "There are no data for the given season/date filter(s)")
-        # )
-        #
-        # tr.df
       })
 
 
@@ -369,8 +346,6 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       tr_df <- reactive({
         req(input$summary_type)
         tr_df_filter_ka() %>%
-          # collect() %>% #See NOTE above
-          # tag_sort(tag.sort = TRUE, tag.sort.primary = TRUE) %>%
           mutate(species = str_to_sentence(species),
                  species = factor(species, levels = sort(unique(species)))) %>%
           tag_sort(col = tag_primary, species, .drop = FALSE)
@@ -464,7 +439,6 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       ### Output table
       tbl_output <- reactive({
         if (input$summary_timing == "fs_mult_raw") {
-          # browser()
           switch(
             req(input$summary_type),
             pinniped = tr_summary_pinniped(),
