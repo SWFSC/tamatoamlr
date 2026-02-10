@@ -14,7 +14,8 @@ mod_tag_resights_ui <- function(id) {
         selectInput(ns("species"), "Species", #inline = TRUE,
                     choices = tamatoamlr::pinniped.sp.study,
                     selected = tamatoamlr::pinniped.sp.study,
-                    multiple = TRUE, selectize = TRUE)
+                    multiple = TRUE, selectize = TRUE),
+        checkboxInput(ns("ka"), "Include only resights of known-age pinnipeds")
         # ),
         # column(
         #   width = 6,
@@ -37,24 +38,26 @@ mod_tag_resights_ui <- function(id) {
                  "and then specify any filters you would like to apply"),
         fluidRow(
           column(6, .summaryTimingUI(ns, c("fs_mult_total", "fs_single", "fs_mult_raw"))),
-          column(6,  radioButtons(ns("summary_type"), .lbl("Summarize by"),
-                                  choices =  c("Pinniped" = "pinniped",
-                                               "Resights by season" = "table",
-                                               "Species" = "species")))
+          column(
+            width = 6,
+            conditionalPanel(
+              "input.summary_timing != 'fs_mult_raw'", ns = ns,
+              radioButtons(ns("summary_type"), .lbl("Summarize by"),
+                           choices =  c("Pinniped" = "pinniped",
+                                        "Resights by season" = "table",
+                                        "Species" = "species",
+                                        "Search" = "search"))
+            ),
+            conditionalPanel(
+              condition = "input.summary_timing == 'fs_mult_raw'", ns = ns,
+              helpText("For raw data, all resights for the given filters",
+                       "are displayed. There are no summary options")
+            )
+          )
           # column(4, uiOutput(ns("table_season_uiOut_selectize")))
         ),
-        checkboxInput(ns("ka"), "Include only resights of known-age pinnipeds"),
-        uiOutput(ns("raw_search_box"))
-        # conditionalPanel(
-        #   "input.summary_timing == 'fs_mult_raw'", ns = ns,
-        #   # amlr_box(
-        #   #   title = "Search options", width = 12,
-        #   box(
-        #     title = "Search options", width = 12, collapsible = TRUE,
-        #     tags$h5("Search options"),
-        #     helpText("todo")
-        #   )
-        # )
+        uiOutput(ns("raw_search_box")),
+
       )
     ),
     mod_output_ui(
@@ -104,21 +107,21 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       #   vals$census_tbl_columns_selected <- NULL
       # })
 
-      observeEvent(input$summary_timing, {
-        choices <- if (input$summary_timing == "fs_mult_raw") {
-          c(
-            "Pinniped" = "pinniped",
-            "All data - no summaries" = "raw"
-          )
-        } else {
-          c(
-            "Pinniped" = "pinniped",
-            "Resights by season" = "table",
-            "Species" = "species"
-          )
-        }
-        updateRadioButtons(session, "summary_type", choices = choices)
-      })
+      # observeEvent(input$summary_timing, {
+      #   choices <- if (input$summary_timing == "fs_mult_raw") {
+      #     c(
+      #       "Pinniped" = "pinniped",
+      #       "All data - no summaries" = "raw"
+      #     )
+      #   } else {
+      #     c(
+      #       "Pinniped" = "pinniped",
+      #       "Resights by season" = "table",
+      #       "Species" = "species"
+      #     )
+      #   }
+      #   updateRadioButtons(session, "summary_type", choices = choices)
+      # })
 
 
       ##########################################################################
@@ -187,8 +190,8 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
 
 
       output$raw_search_box <- renderUI({
-        req(input$summary_timing == "fs_mult_raw")
-
+        req(input$summary_timing != "fs_mult_raw")
+        req(input$summary_type == "search")
 
 
         # tagList(
@@ -439,12 +442,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
       ### Output table
       tbl_output <- reactive({
         if (input$summary_timing == "fs_mult_raw") {
-          switch(
-            req(input$summary_type),
-            pinniped = tr_summary_pinniped(),
-            raw = tr_df(),
-            .validate_else("summary_type")
-          )
+          tr_df()
         } else {
           switch(
             req(input$summary_type),

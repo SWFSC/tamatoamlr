@@ -38,7 +38,7 @@ mod_dcc_pinniped_ui <- function(id) {
           title = NULL, solidHeader = FALSE, width = 12, collapsible = FALSE,
           conditionalPanel(
             condition = "input.summary_type == 'all'", ns = ns,
-            helpText("The below data are all raw DCC data in the uploaded files",
+            helpText("The below data are all raw DCC data in the uploaded files.",
                      "Pings that can be joined with the MicroVHF database key,",
                      "have been joined, but all pings are included."),
             radioButtons(ns("all_join"), .lbl("Raw data options"),
@@ -102,12 +102,14 @@ mod_dcc_pinniped_ui <- function(id) {
 mod_dcc_pinniped_server <- function(id, src, season.df, tab) {
   .mod_check(src, season.df, tab)
 
-  # How to structure this to pull key (tx and other info) from db. Thoughts:
-  #   Will need to make user select single season.
-  #   When they do that, then the code pulls capture data and checks devices
-  #   for all 'micro-vhf tx' devices that were still deployed at the start of the selected season.
-  #   Then for those pinnipeds, pull in pinniped_season data to get pup_mortality_date.
-  #   The end date used in the (individual) filter is pup_mortality_date or device recovered date
+  # How to structure this to pull key (tx and other info) from db.
+  # Thoughts:
+  # Will need to make user select single season. When they do that, then the
+  # code pulls capture data and checks devices for all 'micro-vhf tx' devices
+  # that were still deployed at the start of the selected season. Then for those
+  # pinnipeds, pull in pinniped_season data to get pup_mortality_date. The end
+  # date used in the (individual) filter is pup_mortality_date or device
+  # recovered date
 
 
   moduleServer(

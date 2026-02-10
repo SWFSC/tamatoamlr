@@ -37,7 +37,8 @@ mod_phocid_census_ui <- function(id) {
     ),
     mod_output_ui(
       ns("out"),
-      tags$br(), uiOutput(ns("warning_na_records")),
+      tags$br(),
+      uiOutput(ns("warning_na_records")),
       uiOutput(ns("warning_mult_date_filter"))
     )
   )

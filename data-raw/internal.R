@@ -18,7 +18,7 @@
   "Multiple seasons - facet view" = "fs_mult_facet",
   "Individual capture" = "fs_capture_ind",
   "Single season" = "fs_single",
-  "Multiple seasons - raw data" = "fs_mult_raw"
+  "Raw data" = "fs_mult_raw"
 )
 .summary.timing.choices <- unlist(unname(.summary.timing.choices.list))
 

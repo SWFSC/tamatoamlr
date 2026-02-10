@@ -26,7 +26,7 @@ mod_afs_sam_census_ui <- function(id) {
           # column(4, .summarySpAgeSexUI(ns, c("by_sp_age_sex"), "by_sp_age_sex"))
         ),
         conditionalPanel(
-          "input.summary_timing != 'fs_mult_raw", ns = ns,
+          condition = "input.summary_timing != 'fs_mult_raw'", ns = ns,
           helpText("Note that locations (i.e., the 'location' column in the",
                    "table output) are always grouped")
         )
@@ -34,7 +34,8 @@ mod_afs_sam_census_ui <- function(id) {
     ),
     mod_output_ui(
       ns("out"),
-      tags$br(), uiOutput(ns("warning_na_records")),
+      tags$br(),
+      uiOutput(ns("warning_na_records")),
       uiOutput(ns("warning_mult_date_filter"))
     )
   )

@@ -28,6 +28,34 @@ tamatoa <- function(..., filedsn = NULL) {
   i1 <- icon("th", lib = "font-awesome")
 
 
+  mod_histogram_ui <- function(id){
+    ns <- NS(id)
+
+    tagList(
+      selectInput(ns("plotType"), "Plot Type",
+                  c(Scatter = "scatter", Histogram = "hist")
+      ),
+      # Only show this panel if the plot type is a histogram
+      conditionalPanel(
+        condition = "input.plotType == 'hist'",
+        ns = ns,
+        selectInput(
+          ns("breaks"), "Breaks",
+          c("Sturges", "Scott", "Freedman-Diaconis", "[Custom]" = "custom")
+        ),
+        # Only show this panel if Custom is selected
+        conditionalPanel(
+          condition = "input.breaks == 'custom'",
+          ns = ns,
+          sliderInput(ns("breakCount"), "Break Count", min = 1,
+                      max = 100, value = 10)
+        )
+      ),
+      plotOutput(ns("plot"))
+    )
+  }
+
+
   ##############################################################################
   ##### UI
   ui <- dashboardPage(
@@ -43,6 +71,7 @@ tamatoa <- function(..., filedsn = NULL) {
                  selected = TRUE), #must start here to 'run' the database conn
         # menuItem("AFS Diet", tabName = "tab_afs_diet", icon = i1),
         # menuItem("AFS Natality and Pup Mortality", tabName = "tab_afs_pinniped_season", icon = i1),
+        # menuItem("Test", tabName = "test", icon = i1),
         menuItem("AFS DCC", tabName = .id.list$dcc, icon = i1),
         menuItem("AFS Capewide Pup Census", tabName = .id.list$afs_cwpc, icon = i1),
         menuItem("AFS SAM Census", tabName = .id.list$afs_sam, icon = i1),
@@ -80,7 +109,8 @@ tamatoa <- function(..., filedsn = NULL) {
       "))),
       tabItems(
         tabItem(.id.list$info,
-                fluidRow(mod_database_ui(.id.list$db), mod_season_info_ui(.id.list$si))),
+                fluidRow(mod_database_ui(.id.list$db), mod_season_info_ui(.id.list$si))
+        ),
         tabItem(.id.list$dcc, mod_dcc_pinniped_ui(.id.list$dcc)),
         # tabItem("tab_afs_diet", mod_afs_diet_ui("afs_diet")),
         # tabItem("tab_afs_pinniped_season", mod_afs_pinniped_season_ui("afs_pinniped_season")),
@@ -95,6 +125,7 @@ tamatoa <- function(..., filedsn = NULL) {
         tabItem(.id.list$resights, mod_tag_resights_ui(.id.list$resights)),
         tabItem(.id.list$takes, mod_takes_ui(.id.list$takes)),
         tabItem(.id.list$views, mod_views_ui(.id.list$views))
+        # tabItem('test', mod_histogram_ui("histogram_1"))
         # tabItem("tab_pt", mod_pinnipeds_tags_ui("pinnipeds_tags"))
       )
     )
@@ -176,6 +207,29 @@ tamatoa <- function(..., filedsn = NULL) {
         NULL
       }
     })
+
+
+
+    # mod_histogram_server <- function(id, df, labels, interactive = FALSE){
+    #   moduleServer( id, function(input, output, session){
+    #     x <- rnorm(1000)
+    #     y <- rnorm(1000)
+    #
+    #     output$plot <- renderPlot({
+    #       if (input$plotType == "scatter") {
+    #         plot(x, y)
+    #       } else {
+    #         breaks <- input$breaks
+    #         if (breaks == "custom") {
+    #           breaks <- input$breakCount
+    #         }
+    #         hist(x, breaks = breaks)
+    #       }
+    #     })
+    #   })
+    # }
+    # mod_histogram_server("histogram_1")
+
   }
 
 
