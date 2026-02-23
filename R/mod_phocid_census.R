@@ -531,8 +531,39 @@ mod_phocid_census_server <- function(id, src, season.df, tab) {
 
 
       #-------------------------------------------------------------------------
+      ### Text
+      txt_output <- reactive({
+        req(input$summary_timing == "fs_single")
+
+        x <- tbl_output() %>%
+          filter(census_date_start == max(census_date_start))
+
+        req(nrow(x) > 0)
+
+        counts.list <- lapply(x$species, function(i) {
+          x.curr <- x %>% filter(species == i)
+
+          sp <- x.curr$species
+          sp <- if_else(sp == "Weddell seal", sp, str_to_lower(sp))
+          sp <- if_else(x.curr$count_value > 1, glue("{sp}s"), sp)
+
+          glue("{x.curr$count_value} {sp}")
+        })
+
+        tagList(
+          tags$strong("Summary text for sit rep:"),
+          tags$h5(glue(
+            "During this week's phocid census on {unique(x$census_date_start)}, ",
+            "we counted ",
+            paste(counts.list, collapse = ", ")
+          ))
+        )
+      })
+
+
+      #-------------------------------------------------------------------------
       ### Send off
-      observe(mod_output_server("out", tbl_output, plot_output))
+      observe(mod_output_server("out", tbl_output, plot_output, txt_output))
     }
   )
 }
