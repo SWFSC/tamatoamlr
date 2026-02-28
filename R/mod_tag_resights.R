@@ -436,6 +436,15 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
 
 
       ##########################################################################
+      tr_search <- reactive({
+        tr_df()
+        browser()
+
+
+      })
+
+
+      ##########################################################################
       # Outputs
 
       #-------------------------------------------------------------------------
@@ -449,6 +458,7 @@ mod_tag_resights_server <- function(id, src, season.df, tab) {
             species = tr_summary_species(),
             pinniped = tr_summary_pinniped(),
             table = tr_summary_table(),
+            search = tr_search(),
             .validate_else("summary_type")
           )
         }
