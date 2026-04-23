@@ -20,7 +20,7 @@
 
 * Added tests for `dcc`, `csphoc`, and `cwp` functions [e.g., #6]
 
-* Added "Punta Las Torres" and "Penguin Colonies" to variable `csphoc.core.location.groups`
+* Added "Punta Las Torres", "Penguin Colonies", and "Ballena" to variable `csphoc.core.location.groups`
 
 * Updated `tamatoa` to only allow pre-defined connections via a filedsn argument
 

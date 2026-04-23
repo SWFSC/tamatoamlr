@@ -48,7 +48,7 @@ usethis::use_data(afs.study.beach.counts, overwrite = TRUE)
 ## prepare 'csphoc.core.locations'
 library(dplyr)
 library(odbc)
-con <- odbc::dbConnect(odbc(), filedsn = "../dsn/amlr-pinniped-db-prod.dsn")
+con <- odbc::dbConnect(odbc(), filedsn = "dsn/amlr-pinniped-db-prod.dsn")
 beaches <- tbl(con, "beaches") %>% collect()
 csphoc.core.location.groups <- c(
   "Media Luna", "Punta Yuseff", "Larga", "Marko", "Daniel", "Modulo",
@@ -59,7 +59,7 @@ csphoc.core.location.groups <- c(
   "Schiappacasse", "El Plastico", "Leopard Beach", "del Canal",
   "Aranda", "Remanso", "Golondrina-del Lobero", "Paulina-Aranda",
   "Cape Shirreff", "Copihue", "Peninsula Cerro Gajardo",
-  "Punta Las Torres", "Penguin Colonies"
+  "Punta Las Torres", "Penguin Colonies", "Ballena"
 )
 stopifnot(all(csphoc.core.location.groups %in% beaches$name))
 # csphoc.core.location.groups[!(csphoc.core.location.groups %in% beaches$name)]
